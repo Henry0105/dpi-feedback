@@ -1,0 +1,31 @@
+# Maven #
+target/
+dist/
+
+# UnitTest #
+tmp/
+**/hdfs_output/
+
+# IDEA #
+.idea/
+*.iml
+
+# Eclipse #
+.settings/
+.metadata/
+.classpath
+.project
+bin/
+Servers/
+out/
+logs/
+log
+venv/
+
+distribution/
+metastore_db/
+*.pyc
+*.log
+
+dpianalyze-core/src/main/resources/*
+

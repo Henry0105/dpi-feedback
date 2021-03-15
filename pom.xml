@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>17</version>
+  </parent>
+
+  <groupId>com.mob.bigdata</groupId>
+  <artifactId>dpi-feedback</artifactId>
+  <version>v1.0.0</version>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>dpianalyze-commons</module>
+    <module>dpianalyze-core</module>
+    <module>dpianalyze-resources</module>
+    <module>assembly</module>
+      <module>kafka-feedback</module>
+  </modules>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>1.8</java.version>
+    <scala.version>2.12.8</scala.version>
+    <scala.binary.version>2.12</scala.binary.version>
+    <spark.version>2.4.3.mob1</spark.version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>cloudera</id>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+    <repository>
+      <id>public</id>
+      <url>http://central.maven.org/maven2/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>mob-repos</id>
+      <name>mob Repository</name>
+      <url>http://mvn.code.mob.com:8081/nexus/content/groups/public/</url>
+    </repository>
+    <repository>
+      <id>mob-snapshot</id>
+      <name>Mob Snapshot Repository</name>
+      <url>http://mvn.code.mob.com:8081/nexus/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.youzu.mob.dm</groupId>
+        <artifactId>udf-manager</artifactId>
+        <version>0.0.7</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.scopt</groupId>
+        <artifactId>scopt_${scala.binary.version}</artifactId>
+        <version>3.5.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-core_${scala.binary.version}</artifactId>
+        <version>${spark.version}</version>
+        <scope>${scope.value}</scope>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
+      <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-sql_${scala.binary.version}</artifactId>
+        <version>${spark.version}</version>
+        <scope>${scope.value}</scope>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-hive -->
+      <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-hive_${scala.binary.version}</artifactId>
+        <version>${spark.version}</version>
+        <scope>${scope.value}</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.anarres.lzo</groupId>
+        <artifactId>lzo-hadoop</artifactId>
+        <version>1.0.0</version>
+        <scope>${scope.value}</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest_${scala.binary.version}</artifactId>
+        <version>3.0.5</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+        <version>0.8.0</version>
+        <configuration>
+          <verbose>false</verbose>
+          <failOnViolation>true</failOnViolation>
+          <includeTestSourceDirectory>false</includeTestSourceDirectory>
+          <failOnWarning>false</failOnWarning>
+          <sourceDirectory>${project.basedir}/dpianalyze-core/main/scala</sourceDirectory>
+          <sourceDirectory>${project.basedir}/dpianalyze-commons/main/scala</sourceDirectory>
+          <testSourceDirectory>${project.basedir}/src/test/scala</testSourceDirectory>
+          <configLocation>scalastyle-config.xml</configLocation>
+          <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
+          <outputEncoding>UTF-8</outputEncoding>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!--<plugin>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+            <id>scala-compile-first</id>
+            <phase>process-resources</phase>
+          </execution>
+        </executions>
+        <groupId>net.alchim31.maven</groupId>
+        <version>3.2.0</version>
+      </plugin>-->
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <version>2.15.2</version>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <phase>compile</phase>
+          </execution>
+          <execution>
+            <id>testCompile</id>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <phase>test</phase>
+          </execution>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <encoding>UTF-8</encoding>
+          <maxmem>1024m</maxmem>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <filters>
+                <filter>
+                  <!-- Do not copy the signatures in the META-INF folder.
+                  Otherwise, this might cause SecurityExceptions when using the JAR. -->
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!--本地环境-->
+    <profile>
+      <id>local</id>
+      <properties>
+        <scope.value>compile</scope.value>
+        <env>local</env>
+      </properties>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+    </profile>
+
+    <!--mob 26环境-->
+    <profile>
+      <id>mob</id>
+      <properties>
+        <env>mob</env>
+        <scope.value>provided</scope.value>
+      </properties>
+    </profile>
+
+    <!--mob 26环境(test 用)-->
+    <profile>
+      <id>test</id>
+      <properties>
+        <env>test</env>
+        <scope.value>provided</scope.value>
+      </properties>
+    </profile>
+
+    <!--预发布环境-->
+    <profile>
+      <id>pre</id>
+      <properties>
+        <env>pre</env>
+        <scope.value>provided</scope.value>
+      </properties>
+    </profile>
+
+    <!--正式 175环境-->
+    <profile>
+      <id>prod</id>
+      <properties>
+        <env>prod</env>
+        <scope.value>provided</scope.value>
+      </properties>
+    </profile>
+  </profiles>
+
+
+</project>
