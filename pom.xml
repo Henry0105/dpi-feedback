@@ -19,7 +19,8 @@
     <module>dpianalyze-core</module>
     <module>dpianalyze-resources</module>
     <module>assembly</module>
-      <module>kafka-feedback</module>
+    <module>kafka-feedback</module>
+    <module>dispatcher</module>
   </modules>
 
   <properties>
