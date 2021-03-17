@@ -196,36 +196,36 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     )
 
     //  临时生成 智能 相关的tag表
-
-    sql(
-      s"""
-         |insert overwrite table ${PropUtils.HIVE_TABLE_MARKETPLUS_DPI_TAG_RESULT}
-         |partition (load_day,source,model_type, day)
-         |select id, tag, times, ieid, ifid, col as pid, tag_limit_version, load_day, source, model_type, day
-         |from
-         |(
-         |    select a.id, a.tag, a.times, a.ieid, a.ifid, a.pid, a.tag_limit_version, a.load_day, a.source, a.model_type, a.day
-         |    from
-         |    (
-         |        select id, tag, times, ieid, ifid, pid, tag_limit_version, load_day, source, model_type, day
-         |        from dm_dpi_master.rp_dpi_mkt_device_tag_result
-         |        where load_day='$loadDay' and source='$source' and model_type='$modelType' and day = '$day'
-         |    )a
-         |    join
-         |    (
-         |        select tag
-         |        from dm_dpi_mapping_test.dpi_mkt_url_withtag
-         |        where plat rlike '智能'
-         |        group by tag
-         |        union all
-         |        select tag
-         |        from dm_dpi_mapping_test.tmp_url_operatorstag
-         |        where plat rlike '智能'
-         |        group by tag
-         |    )b
-         |    on trim(a.tag) = trim(b.tag)
-         |)a lateral view explode(split(pid,',')) t as col
-         |""".stripMargin)
+//
+//    sql(
+//      s"""
+//         |insert overwrite table ${PropUtils.HIVE_TABLE_MARKETPLUS_DPI_TAG_RESULT}
+//         |partition (load_day,source,model_type, day)
+//         |select id, tag, times, ieid, ifid, col as pid, tag_limit_version, load_day, source, model_type, day
+//         |from
+//         |(
+//         |    select a.id, a.tag, a.times, a.ieid, a.ifid, a.pid, a.tag_limit_version, a.load_day, a.source, a.model_type, a.day
+//         |    from
+//         |    (
+//         |        select id, tag, times, ieid, ifid, pid, tag_limit_version, load_day, source, model_type, day
+//         |        from dm_dpi_master.rp_dpi_mkt_device_tag_result
+//         |        where load_day='$loadDay' and source='$source' and model_type='$modelType' and day = '$day'
+//         |    )a
+//         |    join
+//         |    (
+//         |        select tag
+//         |        from dm_dpi_mapping_test.dpi_mkt_url_withtag
+//         |        where plat rlike '智能'
+//         |        group by tag
+//         |        union all
+//         |        select tag
+//         |        from dm_dpi_mapping_test.tmp_url_operatorstag
+//         |        where plat rlike '智能'
+//         |        group by tag
+//         |    )b
+//         |    on trim(a.tag) = trim(b.tag)
+//         |)a lateral view explode(split(pid,',')) t as col
+//         |""".stripMargin)
 
   }
 
@@ -316,6 +316,14 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
     case UNICOM =>
+      tm = ""
+      tagSqlFragment = ""
+      tagValueMappingSqlFragment = " split(tag, '#')[0] "
+      idSqlFragment = " id "
+      tagLimitVersionFragment = " tag_limit_version "
+      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+    case HENAN =>
       tm = ""
       tagSqlFragment = ""
       tagValueMappingSqlFragment = " split(tag, '#')[0] "

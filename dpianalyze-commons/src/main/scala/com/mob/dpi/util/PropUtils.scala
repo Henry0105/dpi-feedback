@@ -312,6 +312,7 @@ object PropUtils {
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR: String = getProperty("table_ods_dpi_mkt_feedback_incr")
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JS: String = getProperty("table_ods_dpi_mkt_feedback_incr_js")
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_SD: String = getProperty("table_ods_dpi_mkt_feedback_incr_sd")
+  lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_STAT: String = getProperty("table_ods_dpi_mkt_feedback_incr_stat")
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM: String = getProperty("table_ods_dpi_mkt_feedback_incr_telecom")
   lazy val HIVE_TABLE_DM_DPI_EXT_ID_MAPPING: String = getProperty("table_dm_dpi_ext_id_mapping")
   lazy val HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT: String = getProperty("table_rp_dpi_mkt_device_tag_result")
@@ -324,4 +325,5 @@ object PropUtils {
   lazy val HIVE_TABLE_DPI_MKT_TAG_MAPPING_SHANDONG: String =
     getProperty("table_dpi_mkt_tag_mapping_shandong")
   lazy val HIVE_TABLE_MARKETPLUS_DPI_TAG_RESULT: String = getProperty("table_marketplus_dpi_tag_result")
+  lazy val HIVE_TABLE_DPI_MKT_TAG_STATISTICS_RESULT: String = getProperty("table_dpi_mkt_tag_statistics_result")
 }

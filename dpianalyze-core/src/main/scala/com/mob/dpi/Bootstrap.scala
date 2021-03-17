@@ -1,6 +1,6 @@
 package com.mob.dpi
 
-import com.mob.dpi.dm.{DeviceTagResult, PlatDuid}
+import com.mob.dpi.dm.{DeviceTagResult, PlatDuid, StatisticsResult}
 import com.mob.dpi.monitor.{DPIDataMonitor, DPIMonitorFromMysqlMetric}
 import scopt.OptionParser
 
@@ -75,6 +75,8 @@ object Bootstrap {
         DPIDataMonitor(jobContext).run()
       case "4" =>
         DPIMonitorFromMysqlMetric(jobContext).run()
+      case "5" =>
+        StatisticsResult(jobContext).run()
       case _ =>
         throw new UnsupportedOperationException(s"unsupported jobs[${ params.jobs }], " +
           s"[1-MappingValue]")
