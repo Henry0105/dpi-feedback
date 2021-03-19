@@ -76,24 +76,55 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     // 文件格式: id | tag1:score1,tag2:score2 /
     // 江苏移动的源表是ods_dpi_mkt_feedback_incr_js, 且score为新增字段, 单独处理
 
+    val oriDF = jsonTable match {
+      case "0" =>
+        sql(
+          s"""
+             |select
+             |lower(${idSqlFragment}) id
+             |, ${tagValueMappingSqlFragment} tag
+             |, ${tagLimitVersionFragment} as tag_limit_version
+             |, load_day
+             |, source
+             |, model_type
+             |, day
+             |from $srcTableNameWithDB
+             |where
+             |load_day='$loadDay'
+             |and source='$source'
+             |and model_type='$modelType'
+             |and day='$day'
+             |""".stripMargin).cache()
+      case "1" =>
+        sql(
+          s"""
+             |select
+             |lower(${idSqlFragment}) id
+             |, ${tagValueMappingSqlFragment} tag
+             |, ${tagLimitVersionFragment} as tag_limit_version
+             |, load_day
+             |, source
+             |, model_type
+             |, day
+             |from (
+             |  select
+             |  split(get_json_object(data,'$$.data'),'|')[0] as id
+             |  , split(get_json_object(data,'$$.data'),'|')[1] as tag
+             |  , load_day
+             |  , source
+             |  , model_type
+             |  , day
+             |  from $srcTableNameWithDB
+             |  where
+             |  load_day='$loadDay'
+             |  and source='$source'
+             |  and model_type='$modelType'
+             |  and day='$day'
+             |) s
+             |""".stripMargin).cache()
+    }
 
-    val oriDF = sql(
-      s"""
-         |select
-         |lower(${idSqlFragment}) id
-         |, ${tagValueMappingSqlFragment} tag
-         |, ${tagLimitVersionFragment} as tag_limit_version
-         |, load_day
-         |, source
-         |, model_type
-         |, day
-         |from $srcTableNameWithDB
-         |where
-         |load_day='$loadDay'
-         |and source='$source'
-         |and model_type='$modelType'
-         |and day='$day'
-         |""".stripMargin).cache()
+
     val oriCnt = oriDF.count()
     oriDF.createOrReplaceTempView("origin_data")
 
@@ -196,36 +227,37 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     )
 
     //  临时生成 智能 相关的tag表
-//
-//    sql(
-//      s"""
-//         |insert overwrite table ${PropUtils.HIVE_TABLE_MARKETPLUS_DPI_TAG_RESULT}
-//         |partition (load_day,source,model_type, day)
-//         |select id, tag, times, ieid, ifid, col as pid, tag_limit_version, load_day, source, model_type, day
-//         |from
-//         |(
-//         |    select a.id, a.tag, a.times, a.ieid, a.ifid, a.pid, a.tag_limit_version, a.load_day, a.source, a.model_type, a.day
-//         |    from
-//         |    (
-//         |        select id, tag, times, ieid, ifid, pid, tag_limit_version, load_day, source, model_type, day
-//         |        from dm_dpi_master.rp_dpi_mkt_device_tag_result
-//         |        where load_day='$loadDay' and source='$source' and model_type='$modelType' and day = '$day'
-//         |    )a
-//         |    join
-//         |    (
-//         |        select tag
-//         |        from dm_dpi_mapping_test.dpi_mkt_url_withtag
-//         |        where plat rlike '智能'
-//         |        group by tag
-//         |        union all
-//         |        select tag
-//         |        from dm_dpi_mapping_test.tmp_url_operatorstag
-//         |        where plat rlike '智能'
-//         |        group by tag
-//         |    )b
-//         |    on trim(a.tag) = trim(b.tag)
-//         |)a lateral view explode(split(pid,',')) t as col
-//         |""".stripMargin)
+    //
+    //    sql(
+    //      s"""
+    //         |insert overwrite table ${PropUtils.HIVE_TABLE_MARKETPLUS_DPI_TAG_RESULT}
+    //         |partition (load_day,source,model_type, day)
+    //         |select id, tag, times, ieid, ifid, col as pid, tag_limit_version, load_day, source, model_type, day
+    //         |from
+    //         |(
+    //         |    select a.id, a.tag, a.times, a.ieid, a.ifid, a.pid, a.tag_limit_version,
+    //         a.load_day, a.source, a.model_type, a.day
+    //         |    from
+    //         |    (
+    //         |        select id, tag, times, ieid, ifid, pid, tag_limit_version, load_day, source, model_type, day
+    //         |        from dm_dpi_master.rp_dpi_mkt_device_tag_result
+    //         |        where load_day='$loadDay' and source='$source' and model_type='$modelType' and day = '$day'
+    //         |    )a
+    //         |    join
+    //         |    (
+    //         |        select tag
+    //         |        from dm_dpi_mapping_test.dpi_mkt_url_withtag
+    //         |        where plat rlike '智能'
+    //         |        group by tag
+    //         |        union all
+    //         |        select tag
+    //         |        from dm_dpi_mapping_test.tmp_url_operatorstag
+    //         |        where plat rlike '智能'
+    //         |        group by tag
+    //         |    )b
+    //         |    on trim(a.tag) = trim(b.tag)
+    //         |)a lateral view explode(split(pid,',')) t as col
+    //         |""".stripMargin)
 
   }
 
@@ -285,6 +317,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
   var tagLimitVersionFragment: String = _
   var tagMappingBC: Broadcast[mutable.Map[String, mutable.Map[String, String]]] = _
   var _tagMapping: mutable.Map[String, mutable.Map[String, String]] = mutable.Map.empty
+  var jsonTable: String = _
 
   SourceType.withName(params.source) match {
     case SHANDONG =>
@@ -295,6 +328,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_SD, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
     case TELECOM =>
       // tag 映射表
       tm = ""
@@ -307,6 +341,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
     case SICHUAN =>
       tm = ""
       tagSqlFragment = " replace_tag(tag) "
@@ -315,6 +350,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
     case UNICOM =>
       tm = ""
       tagSqlFragment = ""
@@ -323,6 +359,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       tagLimitVersionFragment = " tag_limit_version "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
     case HENAN =>
       tm = ""
       tagSqlFragment = ""
@@ -331,6 +368,30 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       tagLimitVersionFragment = " tag_limit_version "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
+    case HEBEI =>
+      // tag 转换表
+      tm = ""
+      // tag转换函数
+      tagSqlFragment = ""
+      // 对原始tag处理
+      tagValueMappingSqlFragment = " split(tag, '#')[0] "
+      // 对id 处理
+      idSqlFragment = " id "
+      // taglimit的版本号
+      tagLimitVersionFragment = " '' "
+      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "1"
+    case SICHUAN_NEW =>
+      tm = ""
+      tagSqlFragment = ""
+      tagValueMappingSqlFragment = " split(tag, '#')[0] "
+      idSqlFragment = " id "
+      tagLimitVersionFragment = " '' "
+      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "1"
     case _ =>
       tm = ""
       tagSqlFragment = ""
@@ -339,6 +400,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
   }
 
 

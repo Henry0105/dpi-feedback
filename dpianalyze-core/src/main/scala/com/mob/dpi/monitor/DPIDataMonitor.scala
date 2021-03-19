@@ -19,7 +19,7 @@ import com.mob.dpi._
  * 数据监控, 包括:
  * 1. rp_dpi_app_test.rp_dpi_mkt_device_tag_result
  *    ① 每运营商/模型的数据总量
- *    ② 每运营商/模型的count distinct(imei)总量
+ *    ② 每运营商/模型的count distinct(ieid)总量
  *    ③ 每运营商/模型的标签总量
  *    ④ 每运营商/模型/标签的数据总量
  * 2. dw_dpi_feedback.ods_dpi_mkt_feedback_incr
@@ -63,10 +63,10 @@ case class DPIDataMonitor(jobContext: JobContext) extends Cacheable {
 
     val tagResult = table(PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT).filter($"load_day" === day).cache()
     tagResult.createOrReplaceTempView("tag_result_temp")
-    // 运营商:全局数量统计 id , imei(去重) , tag
+    // 运营商:全局数量统计 id , ieid(去重) , tag
     val totalCnt = sql(
       s"""
-         |select   load_day, source, model_type, day, count(id) id_cnt, count(distinct imei) id_dis_cnt, count(distinct tag) tag_cnt
+         |select   load_day, source, model_type, day, count(id) id_cnt, count(distinct ieid) id_dis_cnt, count(distinct tag) tag_cnt
          |from     tag_result_temp
          |group by load_day, source, model_type, day
        """.stripMargin
@@ -139,7 +139,7 @@ case class DPIDataMonitor(jobContext: JobContext) extends Cacheable {
     //fs.copyToLocalFile(false, srcPath, new Path(localPath))
 
     val localRes: Array[DPIDataMonitorRes] = res.collect().sorted
-    val localPath = s"/home/dpi_test/dpianalyze/dist/output/dpi_data_monitor/$day/dpi_data_monitor_$day.csv"
+    val localPath = s"/home/dpi_master/dpi_feedback/output/dpi_data_monitor/$day/dpi_data_monitor_$day.csv"
     val targetFile = new File(localPath)
     val targetDir = new File(targetFile.getParent)
     if (targetFile.exists()) {

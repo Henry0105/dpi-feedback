@@ -144,6 +144,46 @@ case class PlatDuid(jobContext: JobContext) extends Cacheable {
            |and      version='${lastVersion()}'
        """.stripMargin
       )
+    } else if (stat.source.equalsIgnoreCase("hebei_mobile")) {
+      sql(
+        s"""
+           |insert overwrite table ${stat.dstTableNameWithDB}
+           |partition (load_day='${stat.loadDay}',source='${stat.source}',
+           |model_type='${stat.modelType}',day='${stat.day}')
+           |select   value_md5_14 ieid, pid, id_type,
+           |         split(split(tag, '#')[1], '\\\\$$')[0] plat,
+           |         duidDeCoder(split(split(tag, '#')[1], '\\\\$$')[1],t1.source) duid,
+           |         '' brand,
+           |         '' market_name,
+           |         '' os_type,
+           |         if (size(split(tag, '#')) > 2, duidDeCoder(split(tag, '#')[2],t1.source), '') ifid
+           |from (
+           |         select * from (
+           |          select
+           |           split(get_json_object(data,'$$.data'),'|')[0] as id
+           |           , split(get_json_object(data,'$$.data'),'|')[1] as tag
+           |           , load_day
+           |           , source
+           |           , model_type
+           |           , day
+           |          from
+           |            ${stat.srcTableNameWithDB}
+           |          where
+           |            load_day='${stat.loadDay}'
+           |            and      source='${stat.source}'
+           |            and      model_type='${stat.modelType}'
+           |            and      day='${stat.day}'
+           |         ) s
+           |         where    tag rlike '#'
+           |         and      (split(split(tag, '#')[1], '\\\\$$')[0] != '0' or
+           |                    (size(split(tag, '#')) > 2 and split(tag, '#')[2] != ''))
+           |) t1
+           |join     ${PropUtils.HIVE_TABLE_DM_DPI_EXT_ID_MAPPING} t2
+           |on       lower(t1.id) = lower(t2.id)
+           |and      id_type='$idType' and t2.source='${stat.source}'
+           |and      version='${lastVersion()}'
+       """.stripMargin
+      )
     } else {
       // 匹配value, idfa|imei
       sql(

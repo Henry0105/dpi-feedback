@@ -12,6 +12,8 @@ object SourceType extends Enumeration {
   val ZHEJIANG: SourceType.Value = Value(8, "zhejiang_mobile")
   val TIANJIN: SourceType.Value = Value(9, "tianjin_mobile")
   val TELECOM: SourceType.Value = Value(10, "telecom")
+  val HEBEI: SourceType.Value = Value(11, "hebei_mobile")
+  val SICHUAN_NEW: SourceType.Value = Value(12, "sichuan_mobile")
 //  def main(args: Array[String]): Unit = {
 //    println(SourceType(3))
 //    println(SourceType(3).id)
