@@ -19,7 +19,7 @@ class SenderManager(list: List[FileInfo]) {
 
   val successful = List.empty[FileInfo]
 
-  def init(loadDay: String) = {
+  def init(loadDay: String): Unit = {
 
     mataData = mysqlService.loadData(loadDay)
 
@@ -70,8 +70,8 @@ class SenderManager(list: List[FileInfo]) {
       val v = vs.head
       val rmFiles = vs.map(v => {
         v.producerMode match {
-          case pm1:String if pm1.startsWith("default")  => s"${v.resultFile}"
-          case pm2:String if pm2.startsWith("mapping") => s"${v.resultFile},${v.mappingFile}"
+          case pm1: String if pm1.startsWith("default") => s"${v.resultFile}"
+          case pm2: String if pm2.startsWith("mapping") => s"${v.resultFile},${v.mappingFile}"
         }
       }).mkString(" ")
       FileInfoWithAggr(v.loadDay, v.source, v.modelType, v.day, rmFiles, v.scanMode, v.producerMode)

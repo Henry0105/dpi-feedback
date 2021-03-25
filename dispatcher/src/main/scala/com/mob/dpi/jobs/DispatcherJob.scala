@@ -9,12 +9,13 @@ case class DispatcherJob(params: Params) {
 
   val loadDay = params.day
   // 1.文件生成
-  val fs = new FileScanner(PropUtil.getProperty("dispatcher.data.root"))
+  val fs = new FileScanner(PropUtil.getProperty("dispatcher.data.root"), PropUtil.getProperty("dispatcher.data.hdfs.root"))
   val filePatterns: List[PatternRule] = parsePattern()
   val allTargetFiles = fs.allTargetFiles(filePatterns)
 
 
-  allTargetFiles.foreach(file => {
+  // 因为hdfs 文件自带校验文件,因此不用自己生成校验文件
+  allTargetFiles.filter(!_.scanMode.startsWith("hdfs")).foreach(file => {
     println(s"===> $file")
     // 生成校验文件
     val rPath = file.resultFile
@@ -26,6 +27,7 @@ case class DispatcherJob(params: Params) {
 
     val resCheckFile = new File(PropUtil.getProperty("dispatcher.check_files"), genFn(rPath)).getAbsolutePath
     val mapCheckFile = new File(PropUtil.getProperty("dispatcher.check_files"), genFn(mPath)).getAbsolutePath
+
 
     if (FileUtil.exist(rPath)) {
       FileUtil.checkFileGen(resCheckFile, FileUtil.fileSize(rPath).toString)

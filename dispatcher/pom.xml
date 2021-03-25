@@ -83,6 +83,30 @@
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.8</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-client</artifactId>-->
+<!--            <version>2.6.0</version>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>2.6.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -99,6 +123,15 @@
                     <include>dispatcher.properties</include>
                 </includes>
                 <filtering>true</filtering>
+            </resource>
+
+            <resource>
+                <directory>src/main/resources/</directory>
+                <includes>
+                    <include>*.xml</include>
+                    <include>log4j.properties</include>
+                </includes>
+                <filtering>false</filtering>
             </resource>
         </resources>
 

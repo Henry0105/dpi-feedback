@@ -3,12 +3,17 @@ package com.mob.dpi.jobs.util
 object RegexUtil {
 
 
-  def replaceLoadDay(str: String,loadDay:String): String = {
+  def replaceLoadDay(str: String, loadDay: String): String = {
     str.replace("{load_day}", loadDay)
   }
 
   def regexDataDay(str: String): String = {
     str.replace("{data_day}", s"(\\d{8})")
+  }
+
+
+  def replaceDataDay(str: String, dataDay: String): String = {
+    str.replace("{data_day}", dataDay)
   }
 
   def regexLoadDayTime2(str: String, loadDay: String): String = {

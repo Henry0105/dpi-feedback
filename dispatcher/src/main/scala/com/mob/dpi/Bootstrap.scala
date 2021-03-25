@@ -12,7 +12,6 @@ object Bootstrap {
   def main(args: Array[String]): Unit = {
 
 
-
     val parser = new OptionParser[Params]("dpi-common") {
 
       head("dpi-common")
@@ -29,18 +28,18 @@ object Bootstrap {
 
     }
 
-    parser.parse(args,Params()) match {
-      case Some(params)=> run(params)
+    parser.parse(args, Params()) match {
+      case Some(params) => run(params)
       case _ => sys.exit(1)
     }
 
   }
 
-  def run(params: Params): Unit ={
+  def run(params: Params): Unit = {
     JobTypeEnum(params.job) match {
-      case DISPATCHER=> DispatcherJob(params)
+      case DISPATCHER => DispatcherJob(params)
       case _ =>
-        throw new UnsupportedOperationException(s"unsupported job[${ params.job }]")
+        throw new UnsupportedOperationException(s"unsupported job[${params.job}]")
     }
   }
 }
