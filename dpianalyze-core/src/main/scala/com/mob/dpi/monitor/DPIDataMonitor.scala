@@ -107,6 +107,15 @@ case class DPIDataMonitor(jobContext: JobContext) extends Cacheable {
            |group by load_day, source, model_type, day
        """.stripMargin
       )
+    ).union(
+      sql(
+        s"""
+           |select   load_day, source, model_type, day, count(distinct split(get_json_object(data,'$$.data'),'\\\\|')[0]) id_dis_cnt_incr
+           |from     ${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON}
+           |where    load_day='$day'
+           |group by load_day, source, model_type, day
+       """.stripMargin
+      )
     ).createOrReplaceTempView("id_cnt_incr_temp")
 
     val res = sql(

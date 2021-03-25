@@ -22,13 +22,20 @@ case class PlatDuid(jobContext: JobContext) extends Cacheable {
   @transient implicit val spark: SparkSession = jobContext.spark
 
   val helper = new StatHelper(spark)
+
   import helper._
 
   def run(): Unit = {
 
-    val param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
-      PropUtils.HIVE_TABLE_RP_DPI_IMEI_DUID_MAPPING, "Duid", params.force)
-
+    val param = if (params.source.equalsIgnoreCase("hebei_mobile")
+    || params.source.equalsIgnoreCase("sichuan_mobile")
+    ) {
+      Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_IMEI_DUID_MAPPING, "Duid", params.force)
+    } else {
+      Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_IMEI_DUID_MAPPING, "Duid", params.force)
+    }
     doWithStatus(param, calculate)
 
     spark.stop()
@@ -160,8 +167,8 @@ case class PlatDuid(jobContext: JobContext) extends Cacheable {
            |from (
            |         select * from (
            |          select
-           |           split(get_json_object(data,'$$.data'),'|')[0] as id
-           |           , split(get_json_object(data,'$$.data'),'|')[1] as tag
+           |           split(get_json_object(data,'$$.data'),'\\\\|')[0] as id
+           |           , split(get_json_object(data,'$$.data'),'\\\\|')[1] as tag
            |           , load_day
            |           , source
            |           , model_type

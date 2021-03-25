@@ -108,8 +108,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
              |, day
              |from (
              |  select
-             |  split(get_json_object(data,'$$.data'),'|')[0] as id
-             |  , split(get_json_object(data,'$$.data'),'|')[1] as tag
+             |  split(get_json_object(data,'$$.data'),'\\\\|')[0] as id
+             |  , split(get_json_object(data,'$$.data'),'\\\\|')[1] as tag
              |  , load_day
              |  , source
              |  , model_type
@@ -126,6 +126,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
 
 
     val oriCnt = oriDF.count()
+    println(s"oriCnt: ${oriCnt}")
+    oriDF.show(50, false)
     oriDF.createOrReplaceTempView("origin_data")
 
     val mappingDF = spark.table(PropUtils.HIVE_TABLE_DM_DPI_EXT_ID_MAPPING)
@@ -153,8 +155,9 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
          |join bloom_filtered_mapping_tb t2
          |on lower(trim(t1.id)) = lower(trim(t2.id))
        """.stripMargin
-    ).createOrReplaceTempView("tag_value_mapping_tmp")
+    ).cache().createOrReplaceTempView("tag_value_mapping_tmp")
 
+    sql("select * from tag_value_mapping_tmp").show(50, false)
 
     // 拆分tag
     sql(
@@ -170,7 +173,9 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
          |from tag_value_mapping_tmp
          |LATERAL VIEW explode(split(tag,'\\,')) t1 as tag_exp
        """.stripMargin
-    ).repartition(1).createOrReplaceTempView("tag_explode_tmp")
+    ).repartition(1).cache().createOrReplaceTempView("tag_explode_tmp")
+
+    sql("select * from tag_explode_tmp").show(50, false)
 
     var preSinkTable: String = "tag_explode_tmp"
 
