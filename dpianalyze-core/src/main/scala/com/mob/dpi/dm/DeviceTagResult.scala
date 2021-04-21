@@ -150,7 +150,12 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     // 匹配value, idfa|imei
     sql(
       s"""
-         |select lower(t2.id) id, t1.tag, value_md5_14, pid, t1.day, t1.tag_limit_version
+         |select lower(t2.id) id, t1.tag, value_md5_14, pid, t1.day, t1.tag_limit_version,
+         |value_md5_15 as ieid15,
+         |plat,
+         |pid_ltm,
+         |province_cn,
+         |carrier
          |from origin_data t1
          |join bloom_filtered_mapping_tb t2
          |on lower(trim(t1.id)) = lower(trim(t2.id))
@@ -169,7 +174,12 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
          |       ,value_md5_14
          |       ,pid
          |       ,day
-         |       ,tag_limit_version
+         |       ,tag_limit_version,
+         |        ieid15,
+         |        plat,
+         |        pid_ltm,
+         |        province_cn,
+         |        carrier
          |from tag_value_mapping_tmp
          |LATERAL VIEW explode(split(tag,'\\,')) t1 as tag_exp
        """.stripMargin
@@ -189,7 +199,12 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
            |       ,merge_times
            |       ,value_md5_14
            |       ,pid
-           |       ,tag_limit_version
+           |       ,tag_limit_version,
+           |        ieid15,
+           |        plat,
+           |        pid_ltm,
+           |        province_cn,
+           |        carrier
            |from tag_explode_tmp
            |""".stripMargin).createOrReplaceTempView("tag_mapping_tmp")
 
@@ -225,7 +240,12 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
          |       ,merge_times
          |       ,$finalImeiIdfaSql
          |       ,pid
-         |       ,tag_limit_version
+         |       ,tag_limit_version,
+         |        ieid15,
+         |        plat,
+         |        pid_ltm,
+         |        province_cn,
+         |        carrier
          |from $preSinkTable
          |where tag IS NOT NULL
        """.stripMargin
