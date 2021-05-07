@@ -59,7 +59,7 @@ case class StatisticsResult(jobContext: JobContext) extends Cacheable {
          |load_day,source,model_type,day
          |from ${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_STAT} s
          |lateral view explode(split(tag,',')) t tmp_tag
-         |where tag is not null and tag != ''
+         |where load_day='${params.day}' and tag is not null and tag != ''
          |""".stripMargin)
       .repartition(1)
       .createOrReplaceTempView("src_data_temp")
