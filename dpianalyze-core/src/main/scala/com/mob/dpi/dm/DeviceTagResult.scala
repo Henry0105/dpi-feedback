@@ -1,6 +1,7 @@
 package com.mob.dpi.dm
 
 import com.mob.dpi.aes.AesTool
+import com.mob.dpi.aes.AesToolV2
 import com.mob.dpi.enums.SourceType
 import com.mob.dpi.enums.SourceType._
 import com.mob.dpi.traits.Cacheable
@@ -41,6 +42,9 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
 
     // 山东aes解密
     spark.udf.register("AES_DECRYPT", AesTool.decrypt64 _)
+
+    // 山东aes加密
+    spark.udf.register("AES_ENCRYPT", AesToolV2.encrypt64 _)
 
     // tag转换
     spark.udf.register("tagMapping", tagMapping _)
@@ -349,7 +353,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       tm = PropUtils.HIVE_TABLE_DPI_MKT_TAG_MAPPING_SHANDONG
       tagSqlFragment = " tagMapping(tag, day) "
       tagValueMappingSqlFragment = " concat(tag, ':', score) "
-      idSqlFragment = " md5(AES_DECRYPT(id)) "
+      idSqlFragment = " AES_ENCRYPT(AES_DECRYPT(id)) "
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_SD, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
@@ -417,6 +421,15 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
       jsonTable = "1"
+    case GUANGDONG =>
+      tm = ""
+      tagSqlFragment = ""
+      tagValueMappingSqlFragment = " concat(trim(split(split(data, '\\\\|')[1], '#')[0]), ':', trim(split(split(data, '\\\\|')[1],'#')[1])) "
+      idSqlFragment = " trim(split(data, '\\\\|')[0]) "
+      tagLimitVersionFragment = " '' "
+      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_GD, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
     case _ =>
       tm = ""
       tagSqlFragment = ""

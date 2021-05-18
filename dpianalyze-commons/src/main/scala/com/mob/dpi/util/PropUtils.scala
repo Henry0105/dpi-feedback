@@ -310,6 +310,7 @@ object PropUtils {
 
   // dpi项目用表
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR: String = getProperty("table_ods_dpi_mkt_feedback_incr")
+  lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_GD: String = getProperty("table_ods_dpi_mkt_feedback_incr_gd")
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JS: String = getProperty("table_ods_dpi_mkt_feedback_incr_js")
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_SD: String = getProperty("table_ods_dpi_mkt_feedback_incr_sd")
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_STAT: String = getProperty("table_ods_dpi_mkt_feedback_incr_stat")
