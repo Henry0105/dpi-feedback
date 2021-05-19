@@ -366,7 +366,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       // tag 和 score分开时处理
       tagValueMappingSqlFragment = " concat(tag, ':', '1') "
       // join 前 id 处理
-      idSqlFragment = " if(instr(lower(trim(id)),'mb') = 1, id, concat('MB', id)) "
+      idSqlFragment = " trim(id) "
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
