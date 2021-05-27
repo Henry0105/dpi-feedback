@@ -4,38 +4,35 @@ set -x -e
 cd `dirname $0`
 hive_db=dw_dpi_feedback
 #hive_table=ods_dpi_mkt_feedback_incr_sb
-hive_table=ods_dpi_mkt_feedback_incr_gd
+hive_table=ods_dpi_mkt_feedback_incr_stat
 home_dir=`pwd`
-base_dir=/data/dpi/guangdong_mobile/download/data
 dispatcher_check_files=/home/dpi/dpi_feedback/dispatcher/check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
-data_source=guangdong_mobile
-cd ${base_dir}
+data_source=henan_mobile
+
 
 load_day=$1
-
-file_list=$3
+model_type=$2
+file_list=($3)
 
 function deal_file(){
-  cd ${base_dir}
   file_path=$1
   file_name=${file_path##*/}
-
-  model_type=common
-  cal_day=$(echo ${file_name}|awk -F '_' '{print $NF}'|awk -F '.' '{print $1}')
-  day=$(date -d "${cal_day} 1 days ago" "+%Y%m%d")
-
+  day=$(echo ${file_name}|awk -F '_' '{print $(NF-2)}')
+  tag_limit_version=$(echo ${file_name}|awk -F '_' '{print $(NF-1)}')
   hdfs_path=${hive_path}/load_day=${load_day}/source=${data_source}/model_type=${model_type}/day=${day}
-#  cd ${home_dir}
-#  tmp_file=./${data_source}_${model_type}_${cal_day}.txt
-#  cat ${file_path} |awk -F "|" '{print $1"|"$2":"$3}' > $tmp_file
-  echo "$file_path put into $hdfs_path"
+  cd ${home_dir}
+  tmp_file=./${file_name}
+  cat ${file_path} > ${tmp_file}
+  sed -i '1d' $tmp_file
+  sed -i "s/$/|$tag_limit_version/" ${tmp_file}
+  echo "$file_path put into $hdfs_path"  
   hdfs dfs -mkdir -p ${hdfs_path}
-  hdfs dfs -put -f ${file_path} ${hdfs_path}
-#  rm $tmp_file
+  hdfs dfs -put -f ${tmp_file} ${hdfs_path}
+  rm ${tmp_file}
 }
 
-if [[ -z $file_list ]];then
+if [[ ${#file_list[@]} -eq 0 ]];then
  echo "没有新文件"
  exit 0
 fi
@@ -51,6 +48,6 @@ do
  deal_file ${file}
 done
 
-cd $home_dir
+cd ${home_dir}
 hive -e "msck repair table ${hive_db}.${hive_table}"
 
