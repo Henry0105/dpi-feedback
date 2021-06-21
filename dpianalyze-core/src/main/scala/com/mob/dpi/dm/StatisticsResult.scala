@@ -57,9 +57,16 @@ case class StatisticsResult(jobContext: JobContext) extends Cacheable {
          |if(size(split(t.tmp_tag,':'))>1,split(t.tmp_tag,':')[1],'') as cnt,
          |tag_limit_version,
          |load_day,source,model_type,day
-         |from ${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_STAT} s
+         |from (
+         |  select id,tag,tag_limit_version,load_day,source,model_type,day
+         |  from ${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_STAT}
+         |  where load_day='${params.day}'
+         |    and source = '${params.source}'
+         |    and model_type='${params.modelType}'
+         |    group by id,tag,tag_limit_version,load_day,source,model_type,day
+         |  ) s
          |lateral view explode(split(tag,',')) t tmp_tag
-         |where load_day='${params.day}' and tag is not null and tag != ''
+         |where tag is not null and tag != ''
          |""".stripMargin)
       .repartition(1)
       .createOrReplaceTempView("src_data_temp")

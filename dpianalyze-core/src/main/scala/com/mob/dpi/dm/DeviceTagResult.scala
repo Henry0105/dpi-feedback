@@ -433,7 +433,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     case _ =>
       tm = ""
       tagSqlFragment = ""
-      tagValueMappingSqlFragment = " split(tag, '#')[0] "
+      tagValueMappingSqlFragment = "  (tag, '#')[0] "
       idSqlFragment = " id "
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
