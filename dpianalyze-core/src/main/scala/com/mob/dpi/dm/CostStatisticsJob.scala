@@ -10,13 +10,29 @@ import org.apache.spark.sql.SparkSession
  *
  */
 
-class CostStatisticsJob(cxt: JobContext) extends Cacheable {
-  override protected val spark: SparkSession = cxt.spark
+class CostStatisticsJob(cxt: JobContext)  {
+
 
   def run(): Unit = {
 
 
+    // 取数
+
+
+
+
+
+
+
+    // 入库
+
+
 
   }
+
+
+
+
+
 
 }
