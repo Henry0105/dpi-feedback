@@ -112,8 +112,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
              |, day
              |from (
              |  select
-             |  split(get_json_object(data,'$$.data'),'\\\\|')[0] as id
-             |  , split(get_json_object(data,'$$.data'),'\\\\|')[1] as tag
+             |  ${jsonId}
+             |  , ${jsonTag}
              |  , load_day
              |  , source
              |  , model_type
@@ -347,6 +347,9 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
   var tagMappingBC: Broadcast[mutable.Map[String, mutable.Map[String, String]]] = _
   var _tagMapping: mutable.Map[String, mutable.Map[String, String]] = mutable.Map.empty
   var jsonTable: String = _
+  // json 表中 data 解析
+  var jsonId: String = _
+  var jsonTag : String = _
 
   SourceType.withName(params.source) match {
     case SHANDONG =>
@@ -369,15 +372,6 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       idSqlFragment = " trim(id) "
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM, partMap,
-        PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
-      jsonTable = "0"
-    case SICHUAN =>
-      tm = ""
-      tagSqlFragment = " replace_tag(tag) "
-      tagValueMappingSqlFragment = " split(tag, '#')[0] "
-      idSqlFragment = " id "
-      tagLimitVersionFragment = " '' "
-      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
       jsonTable = "0"
     case UNICOM =>
@@ -409,18 +403,30 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       idSqlFragment = " id "
       // taglimit的版本号
       tagLimitVersionFragment = " '' "
+      // 每家运营商 json data 结构不一致,分别解析
+      jsonId =   s"split(get_json_object(data,'$$.data'),'\\\\|')[0] as id"
+      jsonTag = s"split(get_json_object(data,'$$.data'),'\\\\|')[1] as tag"
+
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
       jsonTable = "1"
-    case SICHUAN_NEW =>
+    case SICHUAN =>
+      // tag 转换表
       tm = ""
+      // tag转换函数
       tagSqlFragment = ""
-      tagValueMappingSqlFragment = " split(tag, '#')[0] "
+      // 对原始tag处理 手动添加score = 1
+      tagValueMappingSqlFragment = " concat(tag, ':', '1') "
+      // 对id 处理
       idSqlFragment = " id "
+      // taglimit的版本号
       tagLimitVersionFragment = " '' "
-      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
+      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
       jsonTable = "1"
+      // 每家运营商 json data 结构不一致,分别解析
+      jsonId =   s"split(get_json_object(data,'$$.data'),'\\\\|')[3] as id"
+      jsonTag = s"split(get_json_object(data,'$$.data'),'\\\\|')[2] as tag"
     case GUANGDONG =>
       tm = ""
       tagSqlFragment = ""
