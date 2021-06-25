@@ -35,7 +35,8 @@ class CostTest extends FunSuite with LocalSparkSession {
         |plat string,
         |tag_cnt string,
         |dup_tag_cnt int,
-        |plat_rate int,
+        |plat_rate DOUBLE,
+        |plat_cal_cost DOUBLE,
         |plat_cost DOUBLE
         |)
         |stored as orc

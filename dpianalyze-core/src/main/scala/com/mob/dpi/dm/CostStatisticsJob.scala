@@ -16,7 +16,9 @@ case class CostStatisticsJob(cxt: JobContext)  {
 
   def run(): Unit = {
 
-    CarrierFactory.createCarrier(cxt).process()
+    CarrierFactory.createCarrier(cxt).process().insertIntoHive()
+
+    cxt.spark.stop()
 
   }
 

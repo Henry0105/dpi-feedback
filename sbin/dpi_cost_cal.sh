@@ -29,10 +29,6 @@ model=$1
 source=$2
 province=$3
 day=${4:-$(date -d '2 days ago' +%Y%m%d)}
-mapping=${5:-"false"}
-force=${6:-"false"}
-#id-mapping 的日分区
-imDay=""
 
 /opt/mobdata/sbin/spark-submit \
     --verbose \
@@ -58,10 +54,7 @@ imDay=""
     --model ${model} \
     --source ${source} \
     --province ${province} \
-    --jobs 6 \
-    --mapping "" \
-    --force false \
-    --imDay ""
+    --jobs "6"
 #######################################################################
 # DPIAnalyze
 # Usage: com.mob.dpi.Bootstrap$ [options]

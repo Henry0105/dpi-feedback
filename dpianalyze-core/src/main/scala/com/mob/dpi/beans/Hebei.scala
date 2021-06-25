@@ -2,7 +2,7 @@ package com.mob.dpi.beans
 
 import org.apache.spark.sql.SparkSession
 
-case class Hebei(override val comParam: ComParam, override val sparkOpt: Option[SparkSession] = None) extends BaseCarrier() {
+case class Hebei(override val comParam: ComParam, override val sparkOpt: Option[SparkSession] = None) extends BaseCarrier {
 
   override protected val calPrice: BigDecimal = 0.0
   override protected val dataPrice: BigDecimal = 0.006
@@ -23,8 +23,9 @@ case class Hebei(override val comParam: ComParam, override val sparkOpt: Option[
        |select s.source, s.load_day, s.day, s.plat
        |, tag_cnt
        |, dup_tag_cnt
-       |, t.plat_curr_sum/t.carrier_curr_sum plat_rate
-       |, round(tag_cnt * (t.plat_curr_sum/t.carrier_curr_sum * ${calPrice} + ${dataPrice}), 4) plat_cost
+       |, round(t.plat_curr_sum/t.carrier_curr_sum, 4) plat_rate
+       |, round(t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cal_cost
+       |, round(tag_cnt * ${dataPrice} + t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cost
        |from
        |(
        |  select a.source, a.load_day, a.day, a.plat

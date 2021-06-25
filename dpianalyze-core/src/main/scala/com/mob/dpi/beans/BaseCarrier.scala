@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 
-abstract class BaseCarrier() extends Cacheable {
+trait BaseCarrier extends Cacheable {
 
 
   protected val comParam: ComParam
@@ -86,8 +86,9 @@ abstract class BaseCarrier() extends Cacheable {
        |select s.source, s.load_day, s.day, s.plat
        |, tag_cnt
        |, dup_tag_cnt
-       |, t.plat_curr_sum/t.carrier_curr_sum plat_rate
-       |, round(tag_cnt * (t.plat_curr_sum/t.carrier_curr_sum * ${calPrice} + ${dataPrice}), 4) plat_cost
+       |, round(t.plat_curr_sum/t.carrier_curr_sum, 4) plat_rate
+       |, round(t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cal_cost
+       |, round(tag_cnt * ${dataPrice} + t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cost
        |from
        |(
        |  select source, load_day, day, plat
