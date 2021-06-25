@@ -2,24 +2,9 @@ package com.mob.dpi.beans
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-class Shandong(override val comParam: ComParam, option: Option[SparkSession] = None) extends BaseCarrier(option) {
+case class Shandong(override val comParam: ComParam, override val sparkOpt: Option[SparkSession] = None) extends BaseCarrier() {
 
-
-
-
-  override def source(spark: SparkSession): DataFrame = {
-
-
-  spark.sql("")
-
-
-    spark.emptyDataFrame
-  }
-
-
-
-
-
-
+  override protected val calPrice: BigDecimal = 0.0
+  override protected val dataPrice: BigDecimal = 0.007
 
 }

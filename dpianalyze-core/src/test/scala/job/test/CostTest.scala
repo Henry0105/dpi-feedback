@@ -1,6 +1,6 @@
 package job.test
 
-import com.mob.dpi.beans.{ComParam, Shandong, Unicom}
+import com.mob.dpi.beans.{Anhui, BaseCarrier, ComParam, Guangdong, Hebei, Henan, Jiangsu, Shandong, Telecom, Tianjin, Unicom, Zhejiang}
 import org.apache.spark.sql.LocalSparkSession
 import org.scalatest.FunSuite
 
@@ -12,35 +12,139 @@ class CostTest extends FunSuite with LocalSparkSession {
     spark.sql("drop database if exists opdw4_224 CASCADE")
     spark.sql("create database opdw4_224")
 
+
+    createTable(
+      """
+        |create table if not exists opdw4_224.sb_carrierSide_temp (
+        |source string,
+        |load_day string,
+        |day string,
+        |id_cnt int,
+        |dup_id_cnt int,
+        |carrier_cost DOUBLE
+        |)
+        |stored as orc
+        |""".stripMargin)
+
+    createTable(
+      """
+        |create table if not exists opdw4_224.sb_platSide_temp (
+        |source string,
+        |load_day string,
+        |day string,
+        |plat string,
+        |tag_cnt string,
+        |dup_tag_cnt int,
+        |plat_rate int,
+        |plat_cost DOUBLE
+        |)
+        |stored as orc
+        |""".stripMargin)
+
+    createTable(
+      """
+        |create table if not exists opdw4_224.sb_cateSide_temp (
+        |source string,
+        |load_day string,
+        |day string,
+        |plat string,
+        |cate_l1 string,
+        |tag_cnt int,
+        |dup_tag_cnt int,
+        |cate_l1_cost DOUBLE
+        |)
+        |stored as orc
+        |""".stripMargin)
+
     spark.sql(
       """
         |create table opdw4_224.dpi_mkt_url_withtag as
-        |select '信用卡' as cate_l1,'k98' as tag,'金融线' as plat
+        |select '信用卡' as cate_l1,'031' as tag,'金融线' as plat
+        |union all
+        |select '信用卡' as cate_l1,'k9a' as tag,'金融线' as plat
+        |union all
+        |select '信用卡' as cate_l1,'idh' as tag,'金融线' as plat
+        |union all
+        |select '信用卡' as cate_l1,'hg0' as tag,'金融线' as plat
+        |union all
+        |select '信用卡' as cate_l1,'k99' as tag,'金融线' as plat
+        |union all
+        |select '信用卡' as cate_l1,'go4' as tag,'金融线' as plat
+        |union all
+        |select '信用卡' as cate_l1,'g2h' as tag,'金融线' as plat
         |""".stripMargin)
 
     spark.sql(
       """
         |create table opdw4_224.tmp_url_operatorstag as
-        |select '教育' as cate_l1,'k97' as tag,'智能增长线_智汇' as plat
+        |select '教育' as cate_l1,'KQ11003540' as tag,'智能增长线_智汇' as plat
+        |union all
+        |select '教育' as cate_l1,'KQ11001969' as tag,'智能增长线_智汇' as plat
+        |union all
+        |select '教育' as cate_l1,'AH11000901' as tag,'智能增长线_智汇' as plat
+        |union all
+        |select '教育' as cate_l1,'TC11000034' as tag,'智能增长线_智汇' as plat
         |""".stripMargin)
 
     spark.sql(
       """
         |create table opdw4_224.test1 as
-        |select 'shandong_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '48f986ef050a5934d574b3dcadbc59dc' id
+        |select 'shandong_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, 'bTiZlRzW4GwDa2pnfBe8Cg==' id, '031' tag
         |union all
-        |select 'unicom' source, '20210623' load_day, '20210622' day, 'generic' model_type, '48f986ef050a5934d574b3dcadbc59dc' id
+        |select 'unicom' source, '20210623' load_day, '20210622' day, 'generic' model_type, '100567827' id, 'k9a:8#0$###' tag
+        |union all
+        |select 'jiangsu_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '4700E41D3646099FB6FAA5F23A761913' id, 'KQ11003540:2,KQ11001969:1' tag
+        |union all
+        |select 'henan_mobile' source, '20210623' load_day, '20210622' day, 'generic' model_type, '01c532c8417fce65c3cfd5b95e8c979f' id, 'idh:1#0$#' tag
+        |union all
+        |select 'tianjin_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '236992ca26ce4f8dbc1d60e4a7fbd320' id, 'hg0:1' tag
+        |union all
+        |select 'zhejiang_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '2ae200f4aee699e9b1b34b0b23e8acc8' id, 'k99:12' tag
+        |union all
+        |select 'anhui_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, 'D916E7DE944E7408D0189C0BB139EDE7' id, 'AH11000901:20' tag
+        |union all
+        |select 'telecom' source, '20210623' load_day, '20210622' day, 'common' model_type, '32586' id, 'TC11000034' tag
         |""".stripMargin)
 
     spark.sql(
       """
         |create table opdw4_224.test2 as
-        |select 'shandong_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '' tag_limit_version, 'k98' tag, '48f986ef050a5934d574b3dcadbc59dc' id
+        |select 'shandong_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '' tag_limit_version, 'bTiZlRzW4GwDa2pnfBe8Cg==' id, '031' tag
         |union all
-        |select 'unicom' source, '20210623' load_day, '20210622' day, 'generic' model_type, '' tag_limit_version, 'k98' tag, '48f986ef050a5934d574b3dcadbc59dc' id
+        |select 'unicom' source, '20210623' load_day, '20210622' day, 'generic' model_type, '' tag_limit_version, '100567827' id, 'k9a' tag
+        |union all
+        |select 'jiangsu_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '' tag_limit_version, '4700E41D3646099FB6FAA5F23A761913' id, 'KQ11003540' tag
+        |union all
+        |select 'henan_mobile' source, '20210623' load_day, '20210622' day, 'generic' model_type, '' tag_limit_version, '01c532c8417fce65c3cfd5b95e8c979f' id, 'idh' tag
+        |union all
+        |select 'tianjin_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '' tag_limit_version, '236992ca26ce4f8dbc1d60e4a7fbd320' id, 'hg0' tag
+        |union all
+        |select 'zhejiang_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '' tag_limit_version, '2ae200f4aee699e9b1b34b0b23e8acc8' id, 'k99' tag
+        |union all
+        |select 'anhui_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '' tag_limit_version, 'D916E7DE944E7408D0189C0BB139EDE7' id, 'AH11000901' tag
+        |union all
+        |select 'telecom' source, '20210623' load_day, '20210622' day, 'common' model_type, '' tag_limit_version, '32586' id, 'TC11000034' tag
+        |union all
+        |select 'guangdong_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, '' tag_limit_version, 'f1ce75974bf78799cd70e5ae47529910' id, 'go4' tag
+        |union all
+        |select 'hebei_mobile' source, '20210623' load_day, '20210622' day, 'generic' model_type, '' tag_limit_version, 'FFFE95584CF8055F4A36AA6315C1DFF4' id, 'g2h' tag
+        |
         |""".stripMargin)
 
 
+    spark.sql(
+      """
+        |create table opdw4_224.test3 as
+        |select 'guangdong_mobile' source, '20210623' load_day, '20210622' day, 'common' model_type, 'f1ce75974bf78799cd70e5ae47529910|go4#1177' data
+        |""".stripMargin)
+
+
+    val hb_data = """{"data":"FFFE95584CF8055F4A36AA6315C1DFF4|g2h:1#0$#","day":"20210620","file_name":"20210621_hebei_generic_20210620.txt","flag":"txt","model_type":"generic","source":"hebei_mobile"}"""
+    spark.sql(
+      s"""
+         |create table opdw4_224.test4 as
+         |select 'hebei_mobile' source, '20210623' load_day, '20210622' day, 'generic' model_type, '${hb_data}' data
+         |""".stripMargin)
 
 
   }
@@ -57,29 +161,39 @@ class CostTest extends FunSuite with LocalSparkSession {
 
   test("cost cal") {
 
+    Shandong(ComParam("20210623", "shandong_mobile", "common", "20210622", argsGen("opdw4_224.test1")), Some(spark)).process().insertIntoHive()
 
-    val otherArgs = Map("local" -> "true", "incrTab" -> "opdw4_224.test1", "tagTab" -> "opdw4_224.test2",
-      "mappingTab1" -> "opdw4_224.dpi_mkt_url_withtag", "mappingTab2" -> "opdw4_224.tmp_url_operatorstag")
+    Unicom(ComParam("20210623", "unicom", "generic", "20210622", argsGen("opdw4_224.test1")), Some(spark)).process().insertIntoHive()
 
-    new Shandong(ComParam("20210623", "shandong_mobile", "common", "20210622", otherArgs), Some(spark)).process()
+    Jiangsu(ComParam("20210623", "jiangsu_mobile", "common", "20210622", argsGen("opdw4_224.test1")), Some(spark)).process().insertIntoHive()
 
+    Henan(ComParam("20210623", "henan_mobile", "generic", "20210622", argsGen("opdw4_224.test1")), Some(spark)).process().insertIntoHive()
+
+    Tianjin(ComParam("20210623", "tianjin_mobile", "common", "20210622", argsGen("opdw4_224.test1")), Some(spark)).process().insertIntoHive()
+
+    Zhejiang(ComParam("20210623", "zhejiang_mobile", "common", "20210622", argsGen("opdw4_224.test1")), Some(spark)).process().insertIntoHive()
+
+    Anhui(ComParam("20210623", "anhui_mobile", "common", "20210622", argsGen("opdw4_224.test1")), Some(spark)).process().insertIntoHive()
+
+    Telecom(ComParam("20210623", "telecom", "common", "20210622", argsGen("opdw4_224.test1")), Some(spark)).process().insertIntoHive()
+
+    Guangdong(ComParam("20210623", "guangdong_mobile", "common", "20210622", argsGen("opdw4_224.test3")), Some(spark)).process().insertIntoHive()
+
+    Hebei(ComParam("20210623", "hebei_mobile", "generic", "20210622", argsGen("opdw4_224.test4")), Some(spark)).process().insertIntoHive()
+
+    show()
+  }
+
+  def argsGen(incr: String) = {
+    Map("local" -> "true", "incrTab" -> s"${incr}", "tagTab" -> "opdw4_224.test2",
+      "mappingTab1" -> "opdw4_224.dpi_mkt_url_withtag", "mappingTab2" -> "opdw4_224.tmp_url_operatorstag",
+      "outOfModels" -> "timewindow", "testDB" -> "opdw4_224")
+  }
+
+  def show(): Unit = {
     println("res =>")
-
-    spark.sql("select * from carrierSide_temp").show(false)
-    spark.sql("select * from platSide_temp").show(false)
-    spark.sql("select * from cateSide_temp").show(false)
-
-
-
-    new Unicom(ComParam("20210623", "unicom", "generic", "20210622", otherArgs), Some(spark)).process()
-
-    println("res =>")
-
-    spark.sql("select * from carrierSide_temp").show(false)
-    spark.sql("select * from platSide_temp").show(false)
-    spark.sql("select * from cateSide_temp").show(false)
-
-
-
+    spark.sql("select * from opdw4_224.sb_carrierSide_temp").show(false)
+    spark.sql("select * from opdw4_224.sb_platSide_temp").show(false)
+    spark.sql("select * from opdw4_224.sb_cateSide_temp").show(false)
   }
 }

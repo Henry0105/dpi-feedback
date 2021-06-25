@@ -8,113 +8,144 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 
-abstract class BaseCarrier(option: Option[SparkSession]) extends Cacheable {
+abstract class BaseCarrier() extends Cacheable {
+
 
   protected val comParam: ComParam
+  protected val sparkOpt: Option[SparkSession]
 
-  private val local: Boolean = comParam.otherArgs.getOrElse("local", "false").toBoolean
-  private val incrTab: String = comParam.otherArgs.getOrElse("incrTab", "")
-  private val tagTab: String = comParam.otherArgs.getOrElse("tagTab", "")
-  private val mappingTab1: String = comParam.otherArgs.getOrElse("mappingTab1", "")
-  private val mappingTab2: String = comParam.otherArgs.getOrElse("mappingTab2", "")
-  private val carrier: String = comParam.source
-  private val endDay: String = comParam.loadDay
-  private val startDay: String = {
+  protected val local: Boolean = comParam.otherArgs.getOrElse("local", "false").toBoolean
+  protected val incrTab: String = comParam.otherArgs.getOrElse("incrTab", "")
+  protected val tagTab: String = comParam.otherArgs.getOrElse("tagTab", "")
+  protected val mappingTab1: String = comParam.otherArgs.getOrElse("mappingTab1", "")
+  protected val mappingTab2: String = comParam.otherArgs.getOrElse("mappingTab2", "")
+  protected val carrier: String = comParam.source
+  protected val endDay: String = comParam.loadDay
+  protected val outOfModels = comParam.otherArgs.getOrElse("outOfModels", "")
+  protected val startDay: String = {
     LocalDate.parse(endDay, DateTimeFormatter.ofPattern("yyyyMMdd"))
       .plusDays(-7)
       .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
   }
 
+  protected val testDB: String = comParam.otherArgs.getOrElse("testDB", "dpi_analysis_test")
 
-  @transient override implicit val spark: SparkSession = option.getOrElse({
+  protected val calPrice: BigDecimal
+  protected val dataPrice: BigDecimal
+
+  @transient protected override implicit val spark: SparkSession = sparkOpt.getOrElse({
     var _builder = SparkSession.builder()
     if (local) _builder = _builder.master("local[*]")
     _builder.enableHiveSupport().getOrCreate()
   })
 
 
-  def source(spark: SparkSession): DataFrame
-
-
-  def paramsCheck(): Boolean = {
+  protected def paramsCheck(): Boolean = {
     StringUtils.isBlank(incrTab) || StringUtils.isBlank(tagTab) || StringUtils.isBlank(carrier) || StringUtils.isBlank(endDay)
   }
 
   // incr表数据源
-  def incrSrcSql: String = {
+  protected def incrSrcSql: String = {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW incrTab_temp as
        |select source, load_day, day, model_type, id
        |from ${incrTab}
-       |where source = '${carrier}' and load_day > '${startDay}' and load_day <= '${endDay}'
+       |where source = '${carrier}' and load_day >= '${startDay}' and load_day <= '${endDay}'
+       |and model_type not in ('${outOfModels.split(",").mkString("','")}')
        |""".stripMargin
   }
 
   // tag表数据源
-  def tagSrcSql: String = {
+  protected def tagSrcSql: String = {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW tagTab_temp as
        |select source, load_day, day, model_type, tag_limit_version, tag, id
        |from ${tagTab}
-       |where source = '${carrier}' and load_day > '${startDay}' and load_day <= '${endDay}'
+       |where source = '${carrier}' and load_day >= '${startDay}' and load_day <= '${endDay}'
+       |and model_type not in ('${outOfModels.split(",").mkString("','")}')
        |""".stripMargin
   }
 
-  // 按运营商统计
-  def carrierSideCost: String = {
+  // 按运营商统计 (若多模型设备重复,算多份钱)
+  protected def carrierSideCost: String = {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW carrierSide_temp as
-       |select source, load_day, day, model_type, count(1) id_cnt, count(distinct id) dup_id_cnt
+       |select source, load_day, day
+       |, count(1) id_cnt
+       |, count(distinct id) dup_id_cnt
+       |, round(count(1) * ${dataPrice}, 4) carrier_cost
        |from incrTab_temp
-       |group by source, load_day, day, model_type
+       |group by source, load_day, day
        |""".stripMargin
   }
 
   // 按tag方式统计(业务,tag,id数量)
-  def platSideCost: String = {
+  protected def platSideCost: String = {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW platSide_temp as
-       |select source, load_day, day, model_type, plat, sum(tag_cnt) tag_cnt, sum(dup_tag_cnt) dup_tag_cnt
+       |select s.source, s.load_day, s.day, s.plat
+       |, tag_cnt
+       |, dup_tag_cnt
+       |, t.plat_curr_sum/t.carrier_curr_sum plat_rate
+       |, round(tag_cnt * (t.plat_curr_sum/t.carrier_curr_sum * ${calPrice} + ${dataPrice}), 4) plat_cost
        |from
        |(
-       |    select a.source, a.load_day, a.day, a.model_type, a.tag, b.plat, a.tag_cnt, a.dup_tag_cnt
-       |    from
-       |    (
-       |      select source, load_day, day, model_type, tag_limit_version, tag, count(1) tag_cnt, count(distinct id) dup_tag_cnt
-       |      from tagTab_temp
-       |      group by source, load_day, day, model_type, tag_limit_version, tag
-       |    )a
-       |    join mappingTab_temp b
-       |    on a.tag = b.tag
-       |)a
-       |group by source, load_day, day, model_type, plat
+       |  select source, load_day, day, plat
+       |  , sum(tag_cnt) tag_cnt
+       |  , sum(dup_tag_cnt) dup_tag_cnt
+       |  from
+       |  (
+       |      select a.source, a.load_day, a.day, a.tag, b.plat
+       |      , a.tag_cnt
+       |      , a.dup_tag_cnt
+       |      from
+       |      (
+       |        select source, load_day, day, tag
+       |        , count(1) tag_cnt
+       |        , count(distinct id) dup_tag_cnt
+       |        from tagTab_temp
+       |        group by source, load_day, day, tag
+       |      )a
+       |      join mappingTab_temp b
+       |      on a.tag = b.tag
+       |  )a
+       |  group by source, load_day, day, plat
+       |)s join platDistribution_temp t
+       |on s.source = t.source and s.load_day = t.load_day and s.day = t.day and s.plat = t.plat
        |""".stripMargin
   }
 
 
   // 按行业统计
-  def cateSideCost: String = {
+  protected def cateSideCost: String = {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW cateSide_temp as
-       |select source, load_day, day, model_type, plat, cate_l1, sum(tag_cnt) tag_cnt, sum(dup_tag_cnt) dup_tag_cnt
+       |select source, load_day, day, plat, cate_l1
+       |, sum(tag_cnt) tag_cnt
+       |, sum(dup_tag_cnt) dup_tag_cnt
+       |, round(sum(tag_cnt) * ${dataPrice} , 4) cate_l1_cost
        |from
        |(
-       |    select a.source, a.load_day, a.day, a.model_type, a.tag, b.cate_l1, b.plat, a.tag_cnt, a.dup_tag_cnt
+       |    select a.source, a.load_day, a.day, a.tag, b.cate_l1, b.plat
+       |    , a.tag_cnt
+       |    , a.dup_tag_cnt
        |    from
        |    (
-       |      select source, load_day, day, model_type, tag, count(1) tag_cnt , count(distinct id) dup_tag_cnt
+       |      select source, load_day, day, tag
+       |      , count(1) tag_cnt
+       |      , count(distinct id) dup_tag_cnt
        |      from tagTab_temp
-       |      group by source, load_day, day, model_type, tag_limit_version, tag
+       |      group by source, load_day, day, tag
        |    ) a
        |    join mappingTab_temp b
        |    on a.tag = b.tag
        |)a
-       |group by source, load_day, day, model_type, plat, cate_l1
+       |group by source, load_day, day, plat, cate_l1
        |""".stripMargin
   }
 
   // mapping 元数据表
-  def mapTab: String = {
+  protected def mapTab: String = {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW mappingTab_temp as
        |select cate_l1, tag, plat
@@ -152,7 +183,7 @@ abstract class BaseCarrier(option: Option[SparkSession]) extends Cacheable {
        |         when cate_l1 rlike '培训' then '培训'
        |         else cate_l1 end as cate_l1, tag,
        |        case when plat rlike '智赋' then '智能增长线_智赋'
-       |        when plat rlike '智弈' then '智能增长线_智弈'
+       |         when plat rlike '智弈' then '智能增长线_智弈'
        |         when plat rlike '智能' then '智能增长线_智汇'
        |         when plat rlike '金融' then '金融线'
        |         when plat rlike '平台|di|DI' then '平台'
@@ -164,14 +195,73 @@ abstract class BaseCarrier(option: Option[SparkSession]) extends Cacheable {
        |""".stripMargin
   }
 
+  // 每家运营商业务线分布占比 (数量与价格)
+  protected def platDistribution: String = {
+    s"""
+       |CREATE OR REPLACE TEMPORARY VIEW platDistribution_temp as
+       |select * from
+       |(
+       |  select source, load_day, day, plat
+       |  , plat_tag_cnt
+       |  ,SUM (plat_tag_cnt) OVER (PARTITION BY plat ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) plat_curr_sum
+       |  ,SUM (plat_tag_cnt) OVER (ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) carrier_curr_sum
+       |  from
+       |  (
+       |    select source, load_day, day, plat
+       |    , sum(tag_cnt) plat_tag_cnt
+       |    from
+       |    (
+       |      select source, load_day, day, tag
+       |      , count(1) tag_cnt
+       |      from ${tagTab}
+       |      where
+       |      source='${carrier}'
+       |      and model_type not in ('${outOfModels.split(",").mkString("','")}')
+       |      and load_day >= date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
+       |      and load_day <= '${endDay}'
+       |      group by source, load_day, day, tag
+       |    )a join mappingTab_temp b
+       |    on a.tag = b.tag
+       |    group by source, load_day, day, plat
+       |  )t1
+       |  union all
+       |  select source, load_day, day, plat
+       |  , plat_tag_cnt
+       |  ,SUM (plat_tag_cnt) OVER (PARTITION BY plat ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) plat_curr_sum
+       |  ,SUM (plat_tag_cnt) OVER (ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) carrier_curr_sum
+       |  from
+       |  (
+       |    select source, load_day, day, plat
+       |    , sum(tag_cnt) plat_tag_cnt
+       |    from
+       |    (
+       |      select source, load_day, day, tag
+       |      , count(1) tag_cnt
+       |      from ${tagTab}
+       |      where
+       |      ${startDay} < date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
+       |      and source='${carrier}'
+       |      and model_type not in ('${outOfModels.split(",").mkString("','")}')
+       |      and load_day >= date_format(to_timestamp(trunc(to_date('${startDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
+       |      and load_day < date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
+       |      group by source, load_day, day, tag
+       |    )a join mappingTab_temp b
+       |  on a.tag = b.tag
+       |  group by source, load_day, day, plat
+       |  )t2
+       |)t
+       |where load_day >= '${startDay}' and load_day <= '${endDay}'
+       |""".stripMargin
+  }
 
-  def prepare(): Unit = {
+  protected def prepare(): Unit = {
     sql(incrSrcSql)
     sql(tagSrcSql)
     sql(mapTab)
+    sql(platDistribution)
   }
 
-  def process(): Unit = {
+  def process(): BaseCarrier = {
 
     if (paramsCheck) throw new Exception("params is error.")
     // 准备数据
@@ -179,6 +269,13 @@ abstract class BaseCarrier(option: Option[SparkSession]) extends Cacheable {
     sql(carrierSideCost)
     sql(platSideCost)
     sql(cateSideCost)
+    this
+  }
+
+  def insertIntoHive(): Unit ={
+    sql(s"insert into table ${testDB}.sb_carrierSide_temp select * from carrierSide_temp")
+    sql(s"insert into table ${testDB}.sb_platSide_temp select * from platSide_temp")
+    sql(s"insert into table ${testDB}.sb_cateSide_temp select * from cateSide_temp")
   }
 }
 

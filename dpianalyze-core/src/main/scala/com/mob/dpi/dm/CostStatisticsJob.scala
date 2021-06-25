@@ -1,6 +1,7 @@
 package com.mob.dpi.dm
 
 import com.mob.dpi.JobContext
+import com.mob.dpi.beans.{CarrierFactory, ComParam}
 import com.mob.dpi.traits.Cacheable
 import org.apache.spark.sql.SparkSession
 
@@ -10,23 +11,12 @@ import org.apache.spark.sql.SparkSession
  *
  */
 
-class CostStatisticsJob(cxt: JobContext)  {
+case class CostStatisticsJob(cxt: JobContext)  {
 
 
   def run(): Unit = {
 
-
-    // 取数
-
-
-
-
-
-
-
-    // 入库
-
-
+    CarrierFactory.createCarrier(cxt).process()
 
   }
 

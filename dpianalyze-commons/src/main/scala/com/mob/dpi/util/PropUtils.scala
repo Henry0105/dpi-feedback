@@ -318,6 +318,8 @@ object PropUtils {
   lazy val HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM: String = getProperty("table_ods_dpi_mkt_feedback_incr_telecom")
   lazy val HIVE_TABLE_DM_DPI_EXT_ID_MAPPING: String = getProperty("table_dm_dpi_ext_id_mapping")
   lazy val HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT: String = getProperty("table_rp_dpi_mkt_device_tag_result")
+  lazy val HIVE_TABLE_DPI_MKT_URL_WITHTAG: String = getProperty("table_dpi_mkt_url_withtag")
+  lazy val HIVE_TABLE_TMP_URL_OPERATORSTAG: String = getProperty("table_tmp_url_operatorstag")
   lazy val HIVE_TABLE_RP_DPI_IMEI_DUID_MAPPING: String = getProperty("table_rp_dpi_imei_duid_mapping")
   lazy val HIVE_TABLE_ORIGINAL_IOS_ID_MAPPING_V2: String = getProperty("table_original_ios_id_mapping_v2")
   lazy val HIVE_TABLE_DM_DPI_MKT_URL_TAG_COMMENT_SICHUAN_MOBILE: String =

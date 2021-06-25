@@ -1,11 +1,11 @@
 package com.mob.dpi.beans
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.SparkSession
 
-case class Unicom(override val comParam: ComParam, override val sparkOpt: Option[SparkSession] = None) extends BaseCarrier() {
+case class Henan(override val comParam: ComParam, override val sparkOpt: Option[SparkSession] = None) extends BaseCarrier() {
 
-  override protected val calPrice: BigDecimal = 45000
-  override protected val dataPrice: BigDecimal = 0.0024
+  override protected val calPrice: BigDecimal = 0.0
+  override protected val dataPrice: BigDecimal = 0.007
 
   // 按设备方式计费 (日,id数量)
   override def platSideCost: String = {
