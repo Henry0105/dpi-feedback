@@ -13,23 +13,23 @@ package object dpi {
   /**
    * 任务参数类
    *
-   * @param day  计算日期, yyyyMMdd格式, 默认T-2
-   * @param source 运营商, 支持: unicom
+   * @param day       计算日期, yyyyMMdd格式, 默认T-2
+   * @param source    运营商, 支持: unicom
    * @param modelType id类型, 支持: idfa|game|common
-   * @param jobs 任务执行列表, 1-MappingValue
-   * @param local 是否本地模式
-   * @param force 是否覆盖写入
-   * @param imDay id_mapping的Day分区版本
+   * @param jobs      任务执行列表, 1-MappingValue
+   * @param local     是否本地模式
+   * @param force     是否覆盖写入
+   * @param imDay     id_mapping的Day分区版本
    */
   case class Params(day: String = LocalDate.now().plusDays(-2).format(DateTimeFormatter.ofPattern("yyyyMMdd")),
-    source: String = "unicom",
-    modelType: String = "game",
-    jobs: String = "1",
-    province: String = "all",
-    local: Boolean = false,
-    mapping: Boolean = false,
-    force: Boolean = false,
-    imDay: String = "" ) extends Serializable
+                    source: String = "unicom",
+                    modelType: String = "game",
+                    jobs: String = "1",
+                    province: String = "all",
+                    local: Boolean = false,
+                    mapping: Boolean = false,
+                    force: Boolean = false,
+                    imDay: String = "") extends Serializable
 
   case class JobContext(params: Params) {
 
@@ -39,6 +39,7 @@ package object dpi {
       _builder.enableHiveSupport().getOrCreate()
     }
 
+    lazy val otherArgs = Map("startDay" -> "20210601", "testDB" -> "dm_dpi_master", "mapTabPre" -> "dpi_analysis_test.mappingTab_temp")
   }
 
   def formatStr(str: String, length: Int): String = {

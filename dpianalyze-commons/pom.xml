@@ -43,6 +43,13 @@
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.binary.version}</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>${mysql.connector.version}</version>
+      <!--<scope>runtime</scope>-->
+    </dependency>
   </dependencies>
 
   <!--<build>

@@ -9,6 +9,7 @@ case class Hebei(override val comParam: ComParam, override val sparkOpt: Option[
 
   override def incrSrcSql: String = {
     s"""
+       |CREATE OR REPLACE TEMPORARY VIEW incrTab_temp as
        |select source, load_day, day, model_type, split(get_json_object(data,'$$.data'),'\\\\|')[0] as id
        |from ${incrTab}
        |where source = '${carrier}' and load_day >= '${startDay}' and load_day <= '${endDay}'
@@ -25,7 +26,10 @@ case class Hebei(override val comParam: ComParam, override val sparkOpt: Option[
        |, dup_tag_cnt
        |, round(t.plat_curr_sum/t.carrier_curr_sum, 4) plat_rate
        |, round(t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cal_cost
-       |, round(tag_cnt * ${dataPrice} + t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cost
+       |, dup_tag_cnt cal_cnt
+       |, round(dup_tag_cnt * ${dataPrice}, 4) plat_cost
+       |, round(t.max_plat_curr_sum/t.max_carrier_curr_sum, 4) last_plat_rate
+       |, round(t.max_plat_curr_sum/t.max_carrier_curr_sum * ${calPrice}, 4) last_plat_cal_cost
        |from
        |(
        |  select a.source, a.load_day, a.day, a.plat

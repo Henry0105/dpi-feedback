@@ -4,8 +4,9 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import com.mob.dpi.traits.Cacheable
+import com.mob.dpi.util.{JdbcTools, Jdbcs}
 import org.apache.commons.lang3.StringUtils
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 
 trait BaseCarrier extends Cacheable {
@@ -22,13 +23,15 @@ trait BaseCarrier extends Cacheable {
   protected val carrier: String = comParam.source
   protected val endDay: String = comParam.loadDay
   protected val outOfModels = comParam.otherArgs.getOrElse("outOfModels", "")
-  protected val startDay: String = {
+  protected val startDay: String = comParam.otherArgs.getOrElse("startDay", {
     LocalDate.parse(endDay, DateTimeFormatter.ofPattern("yyyyMMdd"))
-      .plusDays(-7)
+      .plusDays(-6)
       .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
   }
-
+  )
   protected val testDB: String = comParam.otherArgs.getOrElse("testDB", "dpi_analysis_test")
+
+  protected val mappingTabPre: String = comParam.otherArgs.getOrElse("mappingTabPre", "")
 
   protected val calPrice: BigDecimal
   protected val dataPrice: BigDecimal
@@ -71,11 +74,15 @@ trait BaseCarrier extends Cacheable {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW carrierSide_temp as
        |select source, load_day, day
-       |, count(1) id_cnt
-       |, count(distinct id) dup_id_cnt
-       |, round(count(1) * ${dataPrice}, 4) carrier_cost
-       |from incrTab_temp
-       |group by source, load_day, day
+       |, id_cnt
+       |, dup_id_cnt
+       |, id_cnt cal_cnt
+       |, round(id_cnt * ${dataPrice}, 4) carrier_cost
+       |from
+       |(
+       |  select source, load_day, day, count(1) id_cnt, count(distinct id) dup_id_cnt from incrTab_temp
+       |  group by source, load_day, day
+       |)t
        |""".stripMargin
   }
 
@@ -88,7 +95,10 @@ trait BaseCarrier extends Cacheable {
        |, dup_tag_cnt
        |, round(t.plat_curr_sum/t.carrier_curr_sum, 4) plat_rate
        |, round(t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cal_cost
-       |, round(tag_cnt * ${dataPrice} + t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cost
+       |, tag_cnt cal_cnt
+       |, round(tag_cnt * ${dataPrice}, 4) plat_cost
+       |, round(t.max_plat_curr_sum/t.max_carrier_curr_sum, 4) last_plat_rate
+       |, round(t.max_plat_curr_sum/t.max_carrier_curr_sum * ${calPrice}, 4) last_plat_cal_cost
        |from
        |(
        |  select source, load_day, day, plat
@@ -121,27 +131,32 @@ trait BaseCarrier extends Cacheable {
   protected def cateSideCost: String = {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW cateSide_temp as
-       |select source, load_day, day, plat, cate_l1
-       |, sum(tag_cnt) tag_cnt
-       |, sum(dup_tag_cnt) dup_tag_cnt
-       |, round(sum(tag_cnt) * ${dataPrice} , 4) cate_l1_cost
+       |select source, load_day, day, plat, cate_l1, tag_cnt, dup_tag_cnt
+       |, tag_cnt as cal_cnt
+       |, round(tag_cnt * ${dataPrice} , 4) cate_l1_cost
        |from
        |(
-       |    select a.source, a.load_day, a.day, a.tag, b.cate_l1, b.plat
-       |    , a.tag_cnt
-       |    , a.dup_tag_cnt
-       |    from
-       |    (
-       |      select source, load_day, day, tag
-       |      , count(1) tag_cnt
-       |      , count(distinct id) dup_tag_cnt
-       |      from tagTab_temp
-       |      group by source, load_day, day, tag
-       |    ) a
-       |    join mappingTab_temp b
-       |    on a.tag = b.tag
-       |)a
-       |group by source, load_day, day, plat, cate_l1
+       |  select source, load_day, day, plat, cate_l1
+       |  , sum(tag_cnt) tag_cnt
+       |  , sum(dup_tag_cnt) dup_tag_cnt
+       |  from
+       |  (
+       |      select a.source, a.load_day, a.day, a.tag, b.cate_l1, b.plat
+       |      , a.tag_cnt
+       |      , a.dup_tag_cnt
+       |      from
+       |      (
+       |        select source, load_day, day, tag
+       |        , count(1) tag_cnt
+       |        , count(distinct id) dup_tag_cnt
+       |        from tagTab_temp
+       |        group by source, load_day, day, tag
+       |      ) a
+       |      join mappingTab_temp b
+       |      on a.tag = b.tag
+       |  )a
+       |  group by source, load_day, day, plat, cate_l1
+       |)t
        |""".stripMargin
   }
 
@@ -196,60 +211,82 @@ trait BaseCarrier extends Cacheable {
        |""".stripMargin
   }
 
+  // mapping 元数据表
+  protected def mapTabPre: String = {
+    s"""
+       |CREATE OR REPLACE TEMPORARY VIEW mappingTab_temp as
+       |select cate_l1, tag, plat
+       |from ${mappingTabPre}
+       |""".stripMargin
+  }
+
   // 每家运营商业务线分布占比 (数量与价格)
   protected def platDistribution: String = {
     s"""
        |CREATE OR REPLACE TEMPORARY VIEW platDistribution_temp as
-       |select * from
+       |select source, load_day, day, plat, plat_tag_cnt, plat_curr_sum, carrier_curr_sum, max_plat_curr_sum, max_carrier_curr_sum
+       |from
        |(
-       |  select source, load_day, day, plat
-       |  , plat_tag_cnt
-       |  ,SUM (plat_tag_cnt) OVER (PARTITION BY plat ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) plat_curr_sum
-       |  ,SUM (plat_tag_cnt) OVER (ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) carrier_curr_sum
+       |  select source, load_day, day, plat, plat_tag_cnt, plat_curr_sum, carrier_curr_sum
+       |  , MAX (plat_curr_sum) OVER (PARTITION BY plat ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) max_plat_curr_sum
+       |  , MAX (carrier_curr_sum) OVER (ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) max_carrier_curr_sum
        |  from
        |  (
        |    select source, load_day, day, plat
-       |    , sum(tag_cnt) plat_tag_cnt
+       |    , plat_tag_cnt
+       |    ,SUM (plat_tag_cnt) OVER (PARTITION BY plat ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) plat_curr_sum
+       |    ,SUM (plat_tag_cnt) OVER (ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) carrier_curr_sum
        |    from
        |    (
-       |      select source, load_day, day, tag
-       |      , count(1) tag_cnt
-       |      from ${tagTab}
-       |      where
-       |      source='${carrier}'
-       |      and model_type not in ('${outOfModels.split(",").mkString("','")}')
-       |      and load_day >= date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
-       |      and load_day <= '${endDay}'
-       |      group by source, load_day, day, tag
-       |    )a join mappingTab_temp b
+       |      select source, load_day, day, plat
+       |      , sum(tag_cnt) plat_tag_cnt
+       |      from
+       |      (
+       |        select source, load_day, day, tag
+       |        , count(1) tag_cnt
+       |        from ${tagTab}
+       |        where
+       |        source='${carrier}'
+       |        and model_type not in ('${outOfModels.split(",").mkString("','")}')
+       |        and load_day >= date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
+       |        and load_day <= '${endDay}'
+       |        group by source, load_day, day, tag
+       |      )a join mappingTab_temp b
+       |      on a.tag = b.tag
+       |      group by source, load_day, day, plat
+       |    )t1
+       |  )m1
+       |  union all
+       |  select source, load_day, day, plat, plat_tag_cnt, plat_curr_sum, carrier_curr_sum
+       |  , MAX (plat_curr_sum) OVER (PARTITION BY plat ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) max_plat_curr_sum
+       |  , MAX (carrier_curr_sum) OVER (ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) max_carrier_curr_sum
+       |  from
+       |  (
+       |    select source, load_day, day, plat
+       |    , plat_tag_cnt
+       |    ,SUM (plat_tag_cnt) OVER (PARTITION BY plat ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) plat_curr_sum
+       |    ,SUM (plat_tag_cnt) OVER (ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) carrier_curr_sum
+       |    from
+       |    (
+       |      select source, load_day, day, plat
+       |      , sum(tag_cnt) plat_tag_cnt
+       |      from
+       |      (
+       |        select source, load_day, day, tag
+       |        , count(1) tag_cnt
+       |        from ${tagTab}
+       |        where
+       |        ${startDay} < date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
+       |        and source='${carrier}'
+       |        and model_type not in ('${outOfModels.split(",").mkString("','")}')
+       |        and load_day >= date_format(to_timestamp(trunc(to_date('${startDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
+       |        and load_day < date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
+       |        group by source, load_day, day, tag
+       |      )a join mappingTab_temp b
        |    on a.tag = b.tag
        |    group by source, load_day, day, plat
-       |  )t1
-       |  union all
-       |  select source, load_day, day, plat
-       |  , plat_tag_cnt
-       |  ,SUM (plat_tag_cnt) OVER (PARTITION BY plat ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) plat_curr_sum
-       |  ,SUM (plat_tag_cnt) OVER (ORDER BY day asc, load_day asc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) carrier_curr_sum
-       |  from
-       |  (
-       |    select source, load_day, day, plat
-       |    , sum(tag_cnt) plat_tag_cnt
-       |    from
-       |    (
-       |      select source, load_day, day, tag
-       |      , count(1) tag_cnt
-       |      from ${tagTab}
-       |      where
-       |      ${startDay} < date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
-       |      and source='${carrier}'
-       |      and model_type not in ('${outOfModels.split(",").mkString("','")}')
-       |      and load_day >= date_format(to_timestamp(trunc(to_date('${startDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
-       |      and load_day < date_format(to_timestamp(trunc(to_date('${endDay}', 'yyyyMMdd'), 'MM')), 'yyyyMMdd')
-       |      group by source, load_day, day, tag
-       |    )a join mappingTab_temp b
-       |  on a.tag = b.tag
-       |  group by source, load_day, day, plat
-       |  )t2
+       |    )t2
+       |  )m2
        |)t
        |where load_day >= '${startDay}' and load_day <= '${endDay}'
        |""".stripMargin
@@ -258,7 +295,12 @@ trait BaseCarrier extends Cacheable {
   protected def prepare(): Unit = {
     sql(incrSrcSql)
     sql(tagSrcSql)
+
+//    if (tableExists(mappingTabPre)) {
+//      sql(mapTabPre)
+//    } else {
     sql(mapTab)
+//    }
     sql(platDistribution)
   }
 
@@ -273,10 +315,20 @@ trait BaseCarrier extends Cacheable {
     this
   }
 
-  def insertIntoHive(): Unit ={
-    sql(s"insert into table ${testDB}.sb_carrierSide_temp select * from carrierSide_temp")
-    sql(s"insert into table ${testDB}.sb_platSide_temp select * from platSide_temp")
-    sql(s"insert into table ${testDB}.sb_cateSide_temp select * from cateSide_temp")
+  def insertIntoHive(): BaseCarrier = {
+    sql("set hive.exec.dynamic.partition=true")
+    sql("set hive.exec.dynamic.partition.mode=nonstrict")
+    sql(s"insert into table ${testDB}.sb_carrierSide_temp partition(source) select  load_day, day as data_day, id_cnt, dup_id_cnt, cal_cnt, carrier_cost, source from carrierSide_temp")
+    sql(s"insert into table ${testDB}.sb_platSide_temp partition(source) select  load_day, day as data_day, plat, tag_cnt, dup_tag_cnt, plat_rate, plat_cal_cost, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost, source from platSide_temp")
+    sql(s"insert into table ${testDB}.sb_cateSide_temp partition(source) select  load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt, cal_cnt, cate_l1_cost, source from cateSide_temp")
+    this
+  }
+
+  def insertIntoMysql(): BaseCarrier = {
+    Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, id_cnt, dup_id_cnt, cal_cnt, carrier_cost from carrierSide_temp"), "carrier_side_cost", SaveMode.Append)
+    Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, plat, tag_cnt, dup_tag_cnt, plat_rate, plat_cal_cost, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost from platSide_temp"), "plat_side_cost", SaveMode.Append)
+    Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt, cal_cnt, cate_l1_cost from cateSide_temp"), "cate_side_cost", SaveMode.Append)
+    this
   }
 }
 

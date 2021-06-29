@@ -21,6 +21,7 @@ object CarrierFactory {
       case TIANJIN => createTianjin
       case UNICOM => createUnicom
       case ZHEJIANG => createZhejiang
+      case SICHUAN => createSichuan
     }
 
   }
@@ -30,7 +31,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "")
+      "outOfModels" -> "") ++ cxt.otherArgs
     Shandong(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -39,7 +40,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "")
+      "outOfModels" -> "") ++ cxt.otherArgs
     Anhui(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -48,7 +49,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "")
+      "outOfModels" -> "") ++ cxt.otherArgs
     Guangdong(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -57,7 +58,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "timewindow")
+      "outOfModels" -> "timewindow") ++ cxt.otherArgs
     Hebei(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -66,7 +67,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "timewindow")
+      "outOfModels" -> "timewindow") ++ cxt.otherArgs
     Henan(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -75,7 +76,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "")
+      "outOfModels" -> "") ++ cxt.otherArgs
     Jiangsu(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -84,7 +85,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "")
+      "outOfModels" -> "") ++ cxt.otherArgs
     Telecom(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -93,7 +94,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "")
+      "outOfModels" -> "") ++ cxt.otherArgs
     Tianjin(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -102,7 +103,7 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "timewindow")
+      "outOfModels" -> "timewindow") ++ cxt.otherArgs
     Unicom(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 
@@ -111,7 +112,16 @@ object CarrierFactory {
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
       "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
       "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
-      "outOfModels" -> "")
+      "outOfModels" -> "") ++ cxt.otherArgs
     Zhejiang(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
+  }
+
+  private def createSichuan(implicit cxt: JobContext): Sichuan = {
+    val other = Map("local" -> "false", "incrTab" -> s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON}",
+      "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
+      "mappingTab1" -> s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}",
+      "mappingTab2" -> s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}",
+      "outOfModels" -> "") ++ cxt.otherArgs
+    Sichuan(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
   }
 }

@@ -16,7 +16,10 @@ case class Unicom(override val comParam: ComParam, override val sparkOpt: Option
        |, dup_tag_cnt
        |, round(t.plat_curr_sum/t.carrier_curr_sum, 4) plat_rate
        |, round(t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cal_cost
-       |, round(tag_cnt * ${dataPrice} + t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cost
+       |, dup_tag_cnt cal_cnt
+       |, round(dup_tag_cnt * ${dataPrice}, 4) plat_cost
+       |, round(t.max_plat_curr_sum/t.max_carrier_curr_sum, 4) last_plat_rate
+       |, round(t.max_plat_curr_sum/t.max_carrier_curr_sum * ${calPrice}, 4) last_plat_cal_cost
        |from
        |(
        |  select a.source, a.load_day, a.day, a.plat
