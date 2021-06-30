@@ -12,7 +12,7 @@ case class Jiangsu(override val comParam: ComParam, override val sparkOpt: Optio
        |CREATE OR REPLACE TEMPORARY VIEW incrTab_temp as
        |select source, load_day, day, id, explode_outer(split(tag, ',')) tag_exp
        |from ${incrTab}
-       |where source = '${carrier}' and load_day > '${startDay}' and load_day <= '${endDay}'
+       |where source = '${carrier}' and load_day >= '${startDay}' and load_day <= '${endDay}'
        |and model_type not in ('${outOfModels.split(",").mkString("','")}')
        |""".stripMargin
   }

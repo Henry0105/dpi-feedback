@@ -29,9 +29,17 @@ trait BaseCarrier extends Cacheable {
       .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
   }
   )
-  protected val testDB: String = comParam.otherArgs.getOrElse("testDB", "dpi_analysis_test")
 
+  protected val monthType: Boolean = comParam.otherArgs.getOrElse("monthType", "false").toBoolean
+
+  protected val testDB: String = comParam.otherArgs.getOrElse("testDB", "dpi_analysis_test")
   protected val mappingTabPre: String = comParam.otherArgs.getOrElse("mappingTabPre", "")
+
+  protected val month: String = endDay.trim.substring(0,6)
+
+  protected val toMysql: Boolean = comParam.otherArgs.getOrElse("toMysql", "true").toBoolean
+
+
 
   protected val calPrice: BigDecimal
   protected val dataPrice: BigDecimal
@@ -316,15 +324,17 @@ trait BaseCarrier extends Cacheable {
   }
 
   def insertIntoHive(): BaseCarrier = {
+    if (!monthType) return this
     sql("set hive.exec.dynamic.partition=true")
     sql("set hive.exec.dynamic.partition.mode=nonstrict")
-    sql(s"insert into table ${testDB}.sb_carrierSide_temp partition(source) select  load_day, day as data_day, id_cnt, dup_id_cnt, cal_cnt, carrier_cost, source from carrierSide_temp")
-    sql(s"insert into table ${testDB}.sb_platSide_temp partition(source) select  load_day, day as data_day, plat, tag_cnt, dup_tag_cnt, plat_rate, plat_cal_cost, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost, source from platSide_temp")
-    sql(s"insert into table ${testDB}.sb_cateSide_temp partition(source) select  load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt, cal_cnt, cate_l1_cost, source from cateSide_temp")
+    sql(s"insert into table ${testDB}.carrierSide_cost partition(month, source) select  load_day, day as data_day, id_cnt, dup_id_cnt, cal_cnt, carrier_cost, '${month}' month, source from carrierSide_temp")
+    sql(s"insert into table ${testDB}.platSide_cost partition(month, source) select  load_day, day as data_day, plat, tag_cnt, dup_tag_cnt, plat_rate, plat_cal_cost, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost, '${month}' month, source from platSide_temp")
+    sql(s"insert into table ${testDB}.cateSide_cost partition(month, source) select  load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt, cal_cnt, cate_l1_cost, '${month}' month, source from cateSide_temp")
     this
   }
 
   def insertIntoMysql(): BaseCarrier = {
+    if (!toMysql) return this
     Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, id_cnt, dup_id_cnt, cal_cnt, carrier_cost from carrierSide_temp"), "carrier_side_cost", SaveMode.Append)
     Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, plat, tag_cnt, dup_tag_cnt, plat_rate, plat_cal_cost, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost from platSide_temp"), "plat_side_cost", SaveMode.Append)
     Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt, cal_cnt, cate_l1_cost from cateSide_temp"), "cate_side_cost", SaveMode.Append)

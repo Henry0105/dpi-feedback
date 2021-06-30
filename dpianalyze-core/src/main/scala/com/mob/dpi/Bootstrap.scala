@@ -52,6 +52,12 @@ object Bootstrap {
 
       opt[String]("imDay").text("使用中ID_MAPPING的日分区")
         .action((x, c) => c.copy(imDay = x))
+
+      opt[String]("startDay").text("cost计算周期,起始日期")
+        .action((x, c) => c.copy(startDay = x))
+
+      opt[String]("monthType").text("按月计算")
+        .action((x, c) => c.copy(monthType = x))
     }
 
     parser.parse(args, inputParams) match {

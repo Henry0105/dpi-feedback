@@ -15,7 +15,7 @@ class CostTest extends FunSuite with LocalSparkSession {
 
     createTable(
       """
-        |create table if not exists opdw4_224.sb_carrierSide_temp (
+        |create table if not exists opdw4_224.carrierSide_cost (
         |load_day string,
         |day string,
         |id_cnt int,
@@ -23,13 +23,13 @@ class CostTest extends FunSuite with LocalSparkSession {
         |cal_cnt int,
         |carrier_cost DOUBLE
         |)
-        |partitioned by(source string)
+        |partitioned by(month string, source string)
         |stored as orc
         |""".stripMargin)
 
     createTable(
       """
-        |create table if not exists opdw4_224.sb_platSide_temp (
+        |create table if not exists opdw4_224.platSide_cost (
         |load_day string,
         |day string,
         |plat string,
@@ -42,13 +42,13 @@ class CostTest extends FunSuite with LocalSparkSession {
         |last_plat_rate DOUBLE,
         |last_plat_cal_cost DOUBLE
         |)
-        |partitioned by(source string)
+        |partitioned by(month string, source string)
         |stored as orc
         |""".stripMargin)
 
     createTable(
       """
-        |create table if not exists opdw4_224.sb_cateSide_temp (
+        |create table if not exists opdw4_224.cateSide_cost (
         |load_day string,
         |day string,
         |plat string,
@@ -58,7 +58,7 @@ class CostTest extends FunSuite with LocalSparkSession {
         |cal_cnt int,
         |cate_l1_cost DOUBLE
         |)
-        |partitioned by(source string)
+        |partitioned by(month string, source string)
         |stored as orc
         |""".stripMargin)
 
@@ -231,13 +231,13 @@ class CostTest extends FunSuite with LocalSparkSession {
   def argsGen(incr: String) = {
     Map("local" -> "true", "incrTab" -> s"${incr}", "tagTab" -> "opdw4_224.test2",
       "mappingTab1" -> "opdw4_224.dpi_mkt_url_withtag", "mappingTab2" -> "opdw4_224.tmp_url_operatorstag",
-      "outOfModels" -> "timewindow", "testDB" -> "opdw4_224") ++ Map("startDay" -> "20210601", "mapTabPre" -> "opdw4_224.mappingTab_temp")
+      "outOfModels" -> "timewindow", "testDB" -> "opdw4_224") ++ Map("startDay" -> "20210601", "mapTabPre" -> "opdw4_224.mappingTab_temp", "monthType" -> "false", "toMysql" -> "false")
   }
 
   def show(): Unit = {
     println("res =>")
-    spark.sql("select * from opdw4_224.sb_carrierSide_temp").show(false)
-    spark.sql("select * from opdw4_224.sb_platSide_temp").show(false)
-    spark.sql("select * from opdw4_224.sb_cateSide_temp").show(false)
+    spark.sql("select * from opdw4_224.carrierSide_cost").show(false)
+    spark.sql("select * from opdw4_224.platSide_cost").show(false)
+    spark.sql("select * from opdw4_224.cateSide_cost").show(false)
   }
 }

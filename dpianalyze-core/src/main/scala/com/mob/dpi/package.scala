@@ -4,8 +4,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import com.mob.dpi.util.DateUtils
+import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
+
 import scala.collection.immutable.StringLike
 
 package object dpi {
@@ -29,7 +31,10 @@ package object dpi {
                     local: Boolean = false,
                     mapping: Boolean = false,
                     force: Boolean = false,
-                    imDay: String = "") extends Serializable
+                    imDay: String = "",
+                    startDay: String = "",
+                    monthType: String = "false"
+                   ) extends Serializable
 
   case class JobContext(params: Params) {
 
@@ -39,7 +44,9 @@ package object dpi {
       _builder.enableHiveSupport().getOrCreate()
     }
 
-    lazy val otherArgs = Map("startDay" -> "20210601", "testDB" -> "dm_dpi_master", "mapTabPre" -> "dpi_analysis_test.mappingTab_temp")
+    lazy val otherArgs =
+      Map("startDay" -> params.startDay.trim, "monthType" -> params.monthType, "testDB" -> "dm_dpi_master", "mapTabPre" -> "dpi_analysis_test.mappingTab_temp")
+        .filter(kv => StringUtils.isNoneBlank(kv._2))
   }
 
   def formatStr(str: String, length: Int): String = {
@@ -58,4 +65,11 @@ package object dpi {
     formatStr(str, 24)
   }
 
+  def updateNoneEmpty(target: Map[String, String], kv: (String, String)): Map[String, String] = {
+    if (StringUtils.isNoneBlank(kv._2)) {
+      target + kv
+    } else {
+      target
+    }
+  }
 }
