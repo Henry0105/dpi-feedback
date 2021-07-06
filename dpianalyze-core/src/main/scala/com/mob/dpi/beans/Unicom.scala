@@ -1,5 +1,6 @@
 package com.mob.dpi.beans
 
+import com.mob.dpi.util.PropUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 case class Unicom(override val comParam: ComParam, override val sparkOpt: Option[SparkSession] = None) extends BaseCarrier {
@@ -33,7 +34,7 @@ case class Unicom(override val comParam: ComParam, override val sparkOpt: Option
        |      on a.tag = b.tag
        |  )a
        |  group by a.source, a.load_day, a.day, a.plat
-       |)s join platDistribution_temp t
+       |)s join ${PropUtils.HIVE_TABLE_PLAT_DISTRIBUTION} t
        |on s.source = t.source and s.load_day = t.load_day and s.day = t.day and s.plat = t.plat
        |""".stripMargin
   }

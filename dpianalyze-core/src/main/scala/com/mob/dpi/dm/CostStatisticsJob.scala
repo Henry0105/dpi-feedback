@@ -17,7 +17,7 @@ case class CostStatisticsJob(cxt: JobContext)  {
   def run(): Unit = {
 
     CarrierFactory.createCarrier(cxt).process().insertIntoHive()
-//      .insertIntoMysql()
+      .upsert2Mysql()
 
     cxt.spark.stop()
 

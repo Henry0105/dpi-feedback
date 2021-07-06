@@ -4,9 +4,9 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import com.mob.dpi.traits.Cacheable
-import com.mob.dpi.util.{JdbcTools, Jdbcs}
+import com.mob.dpi.util.{JdbcTools, Jdbcs, PropUtils}
 import org.apache.commons.lang3.StringUtils
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
 
 trait BaseCarrier extends Cacheable {
@@ -18,8 +18,8 @@ trait BaseCarrier extends Cacheable {
   protected val local: Boolean = comParam.otherArgs.getOrElse("local", "false").toBoolean
   protected val incrTab: String = comParam.otherArgs.getOrElse("incrTab", "")
   protected val tagTab: String = comParam.otherArgs.getOrElse("tagTab", "")
-  protected val mappingTab1: String = comParam.otherArgs.getOrElse("mappingTab1", "")
-  protected val mappingTab2: String = comParam.otherArgs.getOrElse("mappingTab2", "")
+  protected val mappingTab1: String = comParam.otherArgs.getOrElse("mappingTab1", s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}")
+  protected val mappingTab2: String = comParam.otherArgs.getOrElse("mappingTab2", s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}")
   protected val carrier: String = comParam.source
   protected val endDay: String = comParam.loadDay
   protected val outOfModels = comParam.otherArgs.getOrElse("outOfModels", "")
@@ -32,13 +32,11 @@ trait BaseCarrier extends Cacheable {
 
   protected val monthType: Boolean = comParam.otherArgs.getOrElse("monthType", "false").toBoolean
 
-  protected val testDB: String = comParam.otherArgs.getOrElse("testDB", "dpi_analysis_test")
-  protected val mappingTabPre: String = comParam.otherArgs.getOrElse("mappingTabPre", "")
+  protected val mappingTabPre: String = comParam.otherArgs.getOrElse("mapTabPre", "")
 
-  protected val month: String = endDay.trim.substring(0,6)
+  protected val month: String = endDay.trim.substring(0, 6)
 
   protected val toMysql: Boolean = comParam.otherArgs.getOrElse("toMysql", "true").toBoolean
-
 
 
   protected val calPrice: BigDecimal
@@ -129,7 +127,7 @@ trait BaseCarrier extends Cacheable {
        |      on a.tag = b.tag
        |  )a
        |  group by source, load_day, day, plat
-       |)s join platDistribution_temp t
+       |)s join ${PropUtils.HIVE_TABLE_PLAT_DISTRIBUTION} t
        |on s.source = t.source and s.load_day = t.load_day and s.day = t.day and s.plat = t.plat
        |""".stripMargin
   }
@@ -231,7 +229,7 @@ trait BaseCarrier extends Cacheable {
   // 每家运营商业务线分布占比 (数量与价格)
   protected def platDistribution: String = {
     s"""
-       |CREATE OR REPLACE TEMPORARY VIEW platDistribution_temp as
+       |insert overwrite table ${PropUtils.HIVE_TABLE_PLAT_DISTRIBUTION}
        |select source, load_day, day, plat, plat_tag_cnt, plat_curr_sum, carrier_curr_sum, max_plat_curr_sum, max_carrier_curr_sum
        |from
        |(
@@ -300,16 +298,19 @@ trait BaseCarrier extends Cacheable {
        |""".stripMargin
   }
 
+
+
   protected def prepare(): Unit = {
     sql(incrSrcSql)
     sql(tagSrcSql)
 
-//    if (tableExists(mappingTabPre)) {
-//      sql(mapTabPre)
-//    } else {
-    sql(mapTab)
-//    }
+    if (tableExists(mappingTabPre)) {
+      sql(mapTabPre)
+    } else {
+      sql(mapTab)
+    }
     sql(platDistribution)
+
   }
 
   def process(): BaseCarrier = {
@@ -327,18 +328,52 @@ trait BaseCarrier extends Cacheable {
     if (!monthType) return this
     sql("set hive.exec.dynamic.partition=true")
     sql("set hive.exec.dynamic.partition.mode=nonstrict")
-    sql(s"insert into table ${testDB}.carrierSide_cost partition(month, source) select  load_day, day as data_day, id_cnt, dup_id_cnt, cal_cnt, carrier_cost, '${month}' month, source from carrierSide_temp")
-    sql(s"insert into table ${testDB}.platSide_cost partition(month, source) select  load_day, day as data_day, plat, tag_cnt, dup_tag_cnt, plat_rate, plat_cal_cost, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost, '${month}' month, source from platSide_temp")
-    sql(s"insert into table ${testDB}.cateSide_cost partition(month, source) select  load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt, cal_cnt, cate_l1_cost, '${month}' month, source from cateSide_temp")
+    sql(
+      s"""insert overwrite table ${PropUtils.HIVE_TABLE_CARRIERSIDE_COST} partition(month, source)
+         |select  load_day, day as data_day, id_cnt, dup_id_cnt
+         |, cal_cnt, carrier_cost, '${month}' month, source
+         |from carrierSide_temp""".stripMargin)
+    sql(
+      s"""insert overwrite table ${PropUtils.HIVE_TABLE_PLATSIDE_COST} partition(month, source)
+         |select  load_day, day as data_day, plat, tag_cnt, dup_tag_cnt, plat_rate, plat_cal_cost
+         |, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost, '${month}' month, source
+         |from platSide_temp""".stripMargin)
+
+    sql(
+      s"""insert overwrite table ${PropUtils.HIVE_TABLE_CATESIDE_COST} partition(month, source)
+         |select  load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt
+         |, cal_cnt, cate_l1_cost, '${month}' month, source
+         |from cateSide_temp""".stripMargin)
     this
   }
 
-  def insertIntoMysql(): BaseCarrier = {
+  def upsert2Mysql(): BaseCarrier = {
     if (!toMysql) return this
-    Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, id_cnt, dup_id_cnt, cal_cnt, carrier_cost from carrierSide_temp"), "carrier_side_cost", SaveMode.Append)
-    Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, plat, tag_cnt, dup_tag_cnt, plat_rate, plat_cal_cost, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost from platSide_temp"), "plat_side_cost", SaveMode.Append)
-    Jdbcs.of().writeToTable(sql(s"select  source, load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt, cal_cnt, cate_l1_cost from cateSide_temp"), "cate_side_cost", SaveMode.Append)
+    val _jdbc = Jdbcs.of()
+    // 更新运营商表
+    val carrier = sql(
+      s"""select  source, load_day, day as data_day, id_cnt, dup_id_cnt
+         |, cal_cnt, carrier_cost
+         |from carrierSide_temp""".stripMargin)
+    _jdbc.writeToTable(carrier.collect(), "carrier_side_cost", carrier.schema.fieldNames.sorted)
+
+    // 更新业务线表
+    val plat = sql(
+      s"""select  source, load_day, day as data_day, plat, tag_cnt, dup_tag_cnt
+         |, plat_rate, plat_cal_cost, cal_cnt, plat_cost, last_plat_rate, last_plat_cal_cost
+         |from platSide_temp""".stripMargin)
+    _jdbc.writeToTable(plat.collect(), "plat_side_cost", plat.schema.fieldNames.sorted)
+
+    // 更新行业表
+    val cate = sql(
+      s"""select  source, load_day, day as data_day, plat, cate_l1, tag_cnt, dup_tag_cnt
+         |, cal_cnt, cate_l1_cost
+         |from cateSide_temp""".stripMargin)
+    _jdbc.writeToTable(cate.collect(), "cate_side_cost", cate.schema.fieldNames.sorted)
+
     this
   }
+
+
 }
 

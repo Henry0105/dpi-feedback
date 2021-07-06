@@ -54,6 +54,12 @@ object ApplicationUtils {
   lazy val MYSQL_DATA_REMAIN_HOUR: Long = getProperty("mysql.data.remain.hour").toLong
   lazy val QUERY_DATA_INTERVAL_DAY: Int = getProperty("query.data.interval.day").toInt
 
+
+  lazy val DPI_COST_JDBC_MYSQL_HOST: String = getProperty("dpi.cost.jdbc.mysql.host")
+  lazy val DPI_COST_JDBC_MYSQL_PORT: String = getProperty("dpi.cost.jdbc.mysql.port")
+  lazy val DPI_COST_JDBC_MYSQL_USERNAME: String = getProperty("dpi.cost.jdbc.mysql.username")
+  lazy val DPI_COST_JDBC_MYSQL_PASSWORD: String = getProperty("dpi.cost.jdbc.mysql.password")
+  lazy val DPI_COST_JDBC_MYSQL_DB: String = getProperty("dpi.cost.jdbc.mysql.db")
   // 各运营商 数据时间
 //  lazy val SD_DATA_OFFSET_DAY: Int = getProperty("sd.data.offset.day").toInt
 //  lazy val HN_DATA_OFFSET_DAY: Int = getProperty("hn.data.offset.day").toInt

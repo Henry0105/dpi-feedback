@@ -330,4 +330,10 @@ object PropUtils {
     getProperty("table_dpi_mkt_tag_mapping_shandong")
   lazy val HIVE_TABLE_MARKETPLUS_DPI_TAG_RESULT: String = getProperty("table_marketplus_dpi_tag_result")
   lazy val HIVE_TABLE_DPI_MKT_TAG_STATISTICS_RESULT: String = getProperty("table_dpi_mkt_tag_statistics_result")
+
+  // dpi 成本统计
+  lazy val HIVE_TABLE_CARRIERSIDE_COST: String = getProperty("table_carrierSide_cost")
+  lazy val HIVE_TABLE_PLATSIDE_COST: String = getProperty("table_platSide_cost")
+  lazy val HIVE_TABLE_CATESIDE_COST: String = getProperty("table_cateSide_cost")
+  lazy val HIVE_TABLE_PLAT_DISTRIBUTION: String = getProperty("table_plat_distribution")
 }

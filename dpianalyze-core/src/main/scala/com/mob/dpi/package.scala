@@ -45,7 +45,7 @@ package object dpi {
     }
 
     lazy val otherArgs =
-      Map("startDay" -> params.startDay.trim, "monthType" -> params.monthType, "testDB" -> "dm_dpi_master", "mapTabPre" -> "dpi_analysis_test.mappingTab_temp")
+      Map("startDay" -> params.startDay.trim, "monthType" -> params.monthType, "mapTabPre" -> "dpi_analysis_test.mappingTab_temp")
         .filter(kv => StringUtils.isNoneBlank(kv._2))
   }
 
