@@ -99,12 +99,12 @@ trait BaseCarrier extends Cacheable {
        |select s.source, s.load_day, s.day, s.plat
        |, tag_cnt
        |, dup_tag_cnt
-       |, round(t.plat_curr_sum/t.carrier_curr_sum, 4) plat_rate
-       |, round(t.plat_curr_sum/t.carrier_curr_sum * ${calPrice}, 4) plat_cal_cost
+       |, 0 plat_rate
+       |, 0 plat_cal_cost
        |, tag_cnt cal_cnt
        |, round(tag_cnt * ${dataPrice}, 4) plat_cost
-       |, round(t.max_plat_curr_sum/t.max_carrier_curr_sum, 4) last_plat_rate
-       |, round(t.max_plat_curr_sum/t.max_carrier_curr_sum * ${calPrice}, 4) last_plat_cal_cost
+       |, 0 last_plat_rate
+       |, 0 last_plat_cal_cost
        |from
        |(
        |  select source, load_day, day, plat
@@ -127,8 +127,7 @@ trait BaseCarrier extends Cacheable {
        |      on a.tag = b.tag
        |  )a
        |  group by source, load_day, day, plat
-       |)s join ${PropUtils.HIVE_TABLE_PLAT_DISTRIBUTION} t
-       |on s.source = t.source and s.load_day = t.load_day and s.day = t.day and s.plat = t.plat
+       |)s
        |""".stripMargin
   }
 
@@ -309,7 +308,7 @@ trait BaseCarrier extends Cacheable {
     } else {
       sql(mapTab)
     }
-    sql(platDistribution)
+//    sql(platDistribution)
 
   }
 

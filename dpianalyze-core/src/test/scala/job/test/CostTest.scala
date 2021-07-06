@@ -187,27 +187,27 @@ class CostTest extends FunSuite with LocalSparkSession {
 
   test("cost cal") {
 
-//    Shandong(ComParam("20210623", "shandong_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_SD}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+    Shandong(ComParam("20210623", "shandong_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_SD}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
 
     Unicom(ComParam("20210623", "unicom", "generic", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
 
-//    Jiangsu(ComParam("20210623", "jiangsu_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
-//
-//    Henan(ComParam("20210623", "henan_mobile", "generic", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
-//
-//    Tianjin(ComParam("20210623", "tianjin_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
-//
-//    Zhejiang(ComParam("20210623", "zhejiang_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
-//
-//    Anhui(ComParam("20210623", "anhui_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
-//
-//    Telecom(ComParam("20210623", "telecom", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
-//
-//    Guangdong(ComParam("20210623", "guangdong_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_GD}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
-//
-//    Hebei(ComParam("20210623", "hebei_mobile", "generic", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
-//
-//    Sichuan(ComParam("20210623", "sichuan_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+    Jiangsu(ComParam("20210623", "jiangsu_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+
+    Henan(ComParam("20210623", "henan_mobile", "generic", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+
+    Tianjin(ComParam("20210623", "tianjin_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+
+    Zhejiang(ComParam("20210623", "zhejiang_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+
+    Anhui(ComParam("20210623", "anhui_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+
+    Telecom(ComParam("20210623", "telecom", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+
+    Guangdong(ComParam("20210623", "guangdong_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_GD}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+
+    Hebei(ComParam("20210623", "hebei_mobile", "generic", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
+
+    Sichuan(ComParam("20210623", "sichuan_mobile", "common", "20210622", argsGen(s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_JSON}")), Some(spark)).process().insertIntoHive().upsert2Mysql()
 
     show()
   }
