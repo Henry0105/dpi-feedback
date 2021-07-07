@@ -30,7 +30,7 @@ source=$2
 province=$3
 day=${4:-$(date -d '2 days ago' +%Y%m%d)}
 startDay=${5}
-monthType=${6}
+monthType=${6:-"false"}
 
 /opt/mobdata/sbin/spark-submit \
     --verbose \
@@ -57,8 +57,8 @@ monthType=${6}
     --source ${source} \
     --province ${province} \
     --jobs "6" \
-    --startDay ${startDay} \
-    --monthType ${monthType}
+    --startDay "${startDay}" \
+    --monthType "${monthType}"
 #######################################################################
 # DPIAnalyze
 # Usage: com.mob.dpi.Bootstrap$ [options]

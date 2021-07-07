@@ -15,15 +15,17 @@ trait BaseCarrier extends Cacheable {
   protected val comParam: ComParam
   protected val sparkOpt: Option[SparkSession]
 
-  protected val local: Boolean = comParam.otherArgs.getOrElse("local", "false").toBoolean
-  protected val incrTab: String = comParam.otherArgs.getOrElse("incrTab", "")
-  protected val tagTab: String = comParam.otherArgs.getOrElse("tagTab", "")
-  protected val mappingTab1: String = comParam.otherArgs.getOrElse("mappingTab1", s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}")
-  protected val mappingTab2: String = comParam.otherArgs.getOrElse("mappingTab2", s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}")
+  protected val otherMap: Map[String, String] = comParam.otherArgs.filter(kv => StringUtils.isNoneBlank(kv._2))
+
+  protected val local: Boolean = otherMap.getOrElse("local", "false").toBoolean
+  protected val incrTab: String = otherMap.getOrElse("incrTab", "")
+  protected val tagTab: String = otherMap.getOrElse("tagTab", "")
+  protected val mappingTab1: String = otherMap.getOrElse("mappingTab1", s"${PropUtils.HIVE_TABLE_DPI_MKT_URL_WITHTAG}")
+  protected val mappingTab2: String = otherMap.getOrElse("mappingTab2", s"${PropUtils.HIVE_TABLE_TMP_URL_OPERATORSTAG}")
   protected val carrier: String = comParam.source
   protected val endDay: String = comParam.loadDay
-  protected val outOfModels = comParam.otherArgs.getOrElse("outOfModels", "")
-  protected val startDay: String = comParam.otherArgs.getOrElse("startDay", {
+  protected val outOfModels = otherMap.getOrElse("outOfModels", "")
+  protected val startDay: String = otherMap.getOrElse("startDay", {
     LocalDate.parse(endDay, DateTimeFormatter.ofPattern("yyyyMMdd"))
       .plusDays(-6)
       .format(DateTimeFormatter.ofPattern("yyyyMMdd"))

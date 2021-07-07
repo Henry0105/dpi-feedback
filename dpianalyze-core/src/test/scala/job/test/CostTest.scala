@@ -214,7 +214,7 @@ class CostTest extends FunSuite with LocalSparkSession {
 
   def argsGen(incr: String) = {
     Map("local" -> "true", "incrTab" -> s"${incr}", "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
-      "outOfModels" -> "timewindow") ++ Map("startDay" -> "20210601", "mapTabPre" -> "dm_dpi_master.mappingTab_temp", "monthType" -> "true", "toMysql" -> "true")
+      "outOfModels" -> "timewindow") ++ Map("startDay" -> "", "mapTabPre" -> "dm_dpi_master.mappingTab_temp", "monthType" -> "false", "toMysql" -> "true")
   }
 
   def show(): Unit = {

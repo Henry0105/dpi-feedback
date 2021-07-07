@@ -46,7 +46,6 @@ package object dpi {
 
     lazy val otherArgs =
       Map("startDay" -> params.startDay.trim, "monthType" -> params.monthType, "mapTabPre" -> "dpi_analysis_test.mappingTab_temp")
-        .filter(kv => StringUtils.isNoneBlank(kv._2))
   }
 
   def formatStr(str: String, length: Int): String = {
