@@ -7,4 +7,7 @@ case class Shandong(override val comParam: ComParam, override val sparkOpt: Opti
   override protected val calPrice: BigDecimal = 0.0
   override protected val dataPrice: BigDecimal = 0.007
 
+  // tag offline start
+
+  override val excludeModelOF = Set("timewindow")
 }

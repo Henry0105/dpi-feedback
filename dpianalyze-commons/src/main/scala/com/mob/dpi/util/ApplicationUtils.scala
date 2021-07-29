@@ -60,6 +60,12 @@ object ApplicationUtils {
   lazy val DPI_COST_JDBC_MYSQL_USERNAME: String = getProperty("dpi.cost.jdbc.mysql.username")
   lazy val DPI_COST_JDBC_MYSQL_PASSWORD: String = getProperty("dpi.cost.jdbc.mysql.password")
   lazy val DPI_COST_JDBC_MYSQL_DB: String = getProperty("dpi.cost.jdbc.mysql.db")
+
+  // 标签下线
+  lazy val DPI_TAG_OFFLINE_MAIL_DEFAULT: String = getProperty("dpi.tag.offline.mail.default")
+  lazy val DPI_TAG_OFFLINE_MAIL_CC: String = getProperty("dpi.tag.offline.mail.cc")
+
+
   // 各运营商 数据时间
 //  lazy val SD_DATA_OFFSET_DAY: Int = getProperty("sd.data.offset.day").toInt
 //  lazy val HN_DATA_OFFSET_DAY: Int = getProperty("hn.data.offset.day").toInt

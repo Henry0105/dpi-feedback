@@ -39,4 +39,8 @@ case class Henan(override val comParam: ComParam, override val sparkOpt: Option[
   }
 
 
+  // tag offline start
+
+  override val excludeModelOF = Set("timewindow")
+
 }

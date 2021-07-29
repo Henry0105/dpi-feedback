@@ -431,20 +431,8 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <artifactId>scala-library</artifactId>
-          <groupId>org.scala-lang</groupId>
-        </exclusion>
-        <exclusion>
           <artifactId>scalactic_2.12</artifactId>
           <groupId>org.scalactic</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>scala-reflect</artifactId>
-          <groupId>org.scala-lang</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>scala-xml_2.12</artifactId>
-          <groupId>org.scala-lang.modules</groupId>
         </exclusion>
       </exclusions>
     </dependency>

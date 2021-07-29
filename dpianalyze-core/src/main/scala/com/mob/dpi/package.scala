@@ -1,5 +1,6 @@
 package com.mob
 
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -47,6 +48,8 @@ package object dpi {
     lazy val otherArgs =
       Map("startDay" -> params.startDay.trim, "monthType" -> params.monthType, "mapTabPre" -> "dpi_analysis_test.mappingTab_temp")
   }
+
+  case class TagOfflineInfo(id: Int, carrierEn: String, carrierZh: String, tag: String, effectiveDay: Timestamp, userEmail: String, checkTimes: Int)
 
   def formatStr(str: String, length: Int): String = {
     s"%-${length}s".format(str)

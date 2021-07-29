@@ -3,13 +3,16 @@ package com.mob.dpi.beans
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+import com.mob.dpi.TagOfflineInfo
+import com.mob.dpi.biz.MailService
 import com.mob.dpi.traits.Cacheable
-import com.mob.dpi.util.{JdbcTools, Jdbcs, PropUtils}
+import com.mob.dpi.util.{ApplicationUtils, JdbcTools, Jdbcs, PropUtils}
+import com.mob.mail.MailSender
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
 
-trait BaseCarrier extends Cacheable {
+trait BaseCarrier extends Cacheable with MailService {
 
 
   protected val comParam: ComParam
@@ -300,7 +303,6 @@ trait BaseCarrier extends Cacheable {
   }
 
 
-
   protected def prepare(): Unit = {
     sql(incrSrcSql)
     sql(tagSrcSql)
@@ -310,7 +312,7 @@ trait BaseCarrier extends Cacheable {
     } else {
       sql(mapTab)
     }
-//    sql(platDistribution)
+    //    sql(platDistribution)
 
   }
 
@@ -375,6 +377,132 @@ trait BaseCarrier extends Cacheable {
     this
   }
 
+  /**
+   * 运营商tag下线校验
+   */
+
+  protected val excludeModelOF = Set.empty[String]
+
+  def offlineVerification(): Unit = {
+
+    val _jdbc = Jdbcs.of()
+    // 保存每天回流的tag的出数量
+    val tagCntDF =
+      sql(
+        s"""
+           |select load_day, source as carrier_en, day as data_day, tag, count(1) id_cnt, count(distinct id) id_dst_cnt
+           |from ${tagTab}
+           |where load_day='${endDay}' and source='${carrier}'
+           |${if (excludeModelOF.isEmpty){"and 1 = 1"} else {s"and model_type not in (${excludeModelOF.mkString("'","','","'")})"} }
+           |group by load_day, source, day, tag
+           |""".stripMargin)
+
+    val _tagCntDF = tagCntDF.collect()
+
+    if (_tagCntDF.isEmpty) {logger.info(s"${carrier} no data feedback.");return; }
+
+    _jdbc.writeToTable(_tagCntDF, "dpi_tag_cnt_info", tagCntDF.schema.fieldNames.sorted)
+
+
+    val tagOfflineInfoes = _jdbc.find(
+      s"""
+         |SELECT
+         |  a.id,
+         |	a.carrier_zh,
+         |	a.carrier_en,
+         |	a.tag,
+         |	a.effective_day,
+         |	a.user_email,
+         |	a.check_times
+         |FROM
+         |	(
+         |		SELECT
+         |      t1.id,
+         |			t1.carrier_id,
+         |			t1.carrier_zh,
+         |			t1.carrier_en,
+         |			t1.shard,
+         |			t1.tag,
+         |			t1.effective_day,
+         |			t1.user_email,
+         |			t1.check_times
+         |		FROM
+         |			dpi_tag_effective_info t1
+         |		JOIN (
+         |			SELECT
+         |				carrier_id,
+         |				carrier_zh,
+         |				carrier_en,
+         |				shard,
+         |				tag,
+         |				max(update_time) update_time
+         |			FROM
+         |				dpi_tag_effective_info
+         |			WHERE
+         |				DATE_FORMAT(update_time, '%Y%m%d') < '${endDay}'
+         |			AND carrier_en = '${carrier}'
+         |			GROUP BY
+         |				carrier_id,
+         |				carrier_zh,
+         |				carrier_en,
+         |				shard,
+         |				tag
+         |		) t2 ON t1.carrier_id = t2.carrier_id
+         |		AND t1.carrier_en = t2.carrier_en
+         |		AND t1.carrier_zh = t2.carrier_zh
+         |		AND t1.shard = t2.shard
+         |		AND t1.tag = t2.tag
+         |		AND t1.update_time = t2.update_time
+         |		WHERE
+         |			STATUS IN ('0','2')
+         |		AND check_times < '10000'
+         |	) a
+         |JOIN (
+         |	SELECT
+         |		load_day,
+         |		carrier_en,
+         |		data_day,
+         |		tag
+         |	FROM
+         |		dpi_tag_cnt_info
+         |	WHERE
+         |		load_day = '${endDay}'
+         |	AND carrier_en = '${carrier}'
+         |) b ON a.tag = b.tag
+         |AND DATE_FORMAT(a.effective_day, '%Y%m%d') <= b.data_day;
+         |""".stripMargin, r => {
+        TagOfflineInfo(r.getInt("id"), r.getString("carrier_en"), r.getString("carrier_zh"), r.getString("tag"), r.getTimestamp("effective_day"), r.getString("user_email"), r.getInt("check_times"))
+      })
+
+
+    // 邮件发送
+    if (tagOfflineInfoes.isEmpty) {
+      logger.info("标签都已下线")
+    } else {
+      logger.info("发送邮件")
+
+      tagOfflineInfoes.groupBy(_.userEmail).foreach(kv => {
+
+        MailSender.sendMail(s"DPI TAG OFFLINE Monitor[load_day=${endDay}]",
+          s"${htmlFmt(kv._2,"carrierZh", "carrierEn", "tag", "effectiveDay", "userEmail", "checkTimes")}",
+          maybeMailDefault(kv._1),mailCc,"")
+
+        logger.info(s"""${maybeMailDefault(kv._1)},
+                ${htmlFmt(kv._2,"carrierZh", "carrierEn", "tag", "effectiveDay", "userEmail", "checkTimes")}""")
+      })
+    }
+
+    // 更新 mysql 的check_times+1
+    val sqls = tagOfflineInfoes.map(info =>
+      s"""
+         |update dpi_tag_effective_info set check_times = ${info.checkTimes + 1} where id = ${info.id};
+         |""".stripMargin).toArray
+
+    if (_jdbc.executeUpdate(sqls)) {
+      logger.info("update success.")
+    }
+
+  }
 
 }
 
