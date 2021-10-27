@@ -95,7 +95,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
              |from $srcTableNameWithDB
              |where
              |load_day='$loadDay'
-             |and source='$source'
+             |and source='${if (source.equals("guangdong_mobile_new")) {"guangdong_mobile"} else { source } }'
              |and model_type='$modelType'
              |and day='$day'
              |""".stripMargin).cache()
@@ -135,7 +135,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     oriDF.createOrReplaceTempView("origin_data")
 
     val mappingDF = spark.table(PropUtils.HIVE_TABLE_DM_DPI_EXT_ID_MAPPING)
-      .where(s"id_type='${idType}' and source='${source}' and version='${lastVersion()}'")
+      .where(s"id_type='${idType}' and source='${if (source.equals("guangdong_mobile_new")) {"guangdong_mobile"} else { source } }' and version='${lastVersion()}'")
     if (oriCnt > 0 && oriCnt < 5000000) {
       import spark.sparkContext.broadcast
       val bf = broadcast(oriDF.stat.bloomFilter("id", oriCnt, 0.01))
@@ -236,7 +236,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     sql(
       s"""
          |insert overwrite table $dstTableNameWithDB
-         |partition (load_day='$loadDay',source='$source',
+         |partition (load_day='$loadDay',source='${if (source.equals("guangdong_mobile_new")) {"guangdong_mobile"} else { source } }',
          |model_type='$modelType', day='$day')
          |select trim(id) id
          |       ,trim(tag) tag
