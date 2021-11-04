@@ -19,11 +19,12 @@ function deal_file(){
   file_path=$1
   file_name=${file_path##*/}
   day=$(echo ${file_name}|awk -F '_' '{print $(NF-2)}')
-  tag_limit_version=$(echo ${file_name}|awk -F '_' '{print $(NF-1)}')
-  hdfs_path=${hive_path}/load_day=${load_day}/source=${data_source}/model_type=${model_type}/day=${day}
+#  tag_limit_version=$(echo ${file_name}|awk -F '_' '{print $(NF-1)}')
+  tag_limit_version=""
+  hdfs_path=${hive_path}/load_day=${load_day}/source=${data_source}/model_type=${model_type}/day=$(hdfs dfs -tail ${file_path} | jq '.day'|uniq |tr -d "\""  )
   cd ${home_dir}
   tmp_file=./${file_name}
-  cat ${file_path} > ${tmp_file}
+  hdfs dfs -cat ${file_path} | jq '.data'|tr -d "\"" > $tmp_file
   sed -i '1d' $tmp_file
   sed -i "s/$/|$tag_limit_version/" ${tmp_file}
   echo "$file_path put into $hdfs_path"  

@@ -11,6 +11,7 @@ object CarrierFactory {
   def createCarrier(implicit cxt: JobContext): BaseCarrier = {
 
     SourceType.withName(cxt.params.source) match {
+      case GDN => createGDN
       case SHANDONG => createShandong
       case ANHUI => createAnhui
       case GUANGDONG => createGuangdong
@@ -25,7 +26,12 @@ object CarrierFactory {
     }
 
   }
-
+  private def createGDN(implicit cxt: JobContext): Gdn = {
+    val other = Map("local" -> "false", "incrTab" -> s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}",
+      "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
+      "outOfModels" -> "common,dns_common") ++ cxt.otherArgs
+    Gdn(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType, cxt.params.day, other), Some(cxt.spark))
+  }
   private def createShandong(implicit cxt: JobContext): Shandong = {
     val other = Map("local" -> "false", "incrTab" -> s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_SD}",
       "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",

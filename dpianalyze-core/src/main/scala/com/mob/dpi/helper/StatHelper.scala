@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.TableIdentifier
 class StatHelper(@transient val spark: SparkSession) extends Serializable {
   @transient private[this] val logger: Logger = Logger.getLogger(this.getClass)
 
-  case class Param(srcName: String, partition: Map[String, String],
+  case class Param(var srcName: String, var partition: Map[String, String],
                    dstName: String, feedbackType: String, force: Boolean)
 
   def getDays(param: Param): Set[String] = {
@@ -201,6 +201,10 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
   def doWithStatus(param: Param, f: DpiFeedBackStat => Unit): Unit = {
     // 创建源的状态
     val originStat = newSourceStatAndGet(param)
+    if ("guangdong_mobile_new".equals(param.partition("source"))) {
+      param.partition += ("source" -> "guangdong_mobile")
+    }
+    println(s"dbgparam:$param")
     // 创建并返回源子分区状态
     val stats = newDpiStatAndGet(param, 1)
     if (stats.nonEmpty) {
