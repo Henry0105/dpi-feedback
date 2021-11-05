@@ -374,6 +374,19 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM, partMap,
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
       jsonTable = "0"
+    case TELECOM_TIMEWINDOW =>
+      // tag 映射表
+      tm = ""
+      // tag 转换
+      tagSqlFragment = ""
+      // tag 和 score分开时处理
+      tagValueMappingSqlFragment = " concat(tag, ':', '1') "
+      // join 前 id 处理
+      idSqlFragment = " trim(id) "
+      tagLimitVersionFragment = " '' "
+      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_TELECOM, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
     case UNICOM =>
       tm = ""
       tagSqlFragment = ""
