@@ -1,22 +1,10 @@
 package com.mob.dpi.utils;
 
 import com.mob.dpi.pojo.*;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat;
-import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.OutputFormat;
-import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.Reporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Tuple2;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -33,7 +21,7 @@ public class HiveUtils {
     public static StandardStructObjectInspector generateHiveInspector(String schema){
         // 创建字段分割器StandardStructObjectInspector
         String[] fields = schema.split(",");
-        List<String> structFieldNames = Arrays.asList(fields.clone());
+        List<String> structFieldNames = new ArrayList();
         List<ObjectInspector> objectInspectors = new ArrayList();
 
         for(String str:fields) {

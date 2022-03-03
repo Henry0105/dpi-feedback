@@ -73,7 +73,7 @@ public class HDFSUtils {
         //System.out.println(rows.size());
         Iterator it = rows.iterator();
         while(it.hasNext()) {
-            List<String> list = (ComparableList) it.next();
+            List<Object> list = (ComparableList) it.next();
 
             Writable row = serde.serialize(list, standardStructObjectInspector);
             writer.write(NullWritable.get(), row);
