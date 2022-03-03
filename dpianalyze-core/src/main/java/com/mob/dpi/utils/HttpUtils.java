@@ -48,6 +48,7 @@ public class HttpUtils {
         String dbName = "u_lx_datgrp6";
         String tableName = "lx_info_nf_20";
 
+
         // 获取token
         long time = System.currentTimeMillis();
         String sign = sign(MD5Util.MD5(password), username + apiKey + time);

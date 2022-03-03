@@ -114,7 +114,7 @@ public class HDFSUtils {
         logger.info("Hive表存储目录为{}",hiveTablePath);
 
         // 先判断对应的HDFS目录是否存在，不存在先创建
-        String partitionDir = hiveTablePath.concat("/").concat("date=" + date).concat("/");
+        String partitionDir = hiveTablePath.concat("/").concat("day=" + date).concat("/");
         if(!fs.exists(new Path(partitionDir))){
             logger.info("创建HDFS目录{}",partitionDir);
             fs.mkdirs(new Path(partitionDir));

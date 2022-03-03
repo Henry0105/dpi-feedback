@@ -25,7 +25,7 @@ public class APIToHiveOrc {
 
         // 元数据格式【列名1:类型1,...列名n:类型n】
         // 必须按顺序排列
-        String schema = "gwId:String,companyName:String,visitDate:String,pvSum:Int,monthPvSum:Int,companyAddress:String,deviceType:String";
+        String schema = "gw_id:String,company_name:String,industry:String,company_address:String,visit_date:String,pv_sum:Int,month_pv_sum:Int";
 
         // 20220221
         String date = args[0];
