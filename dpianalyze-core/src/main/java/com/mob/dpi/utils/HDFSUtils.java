@@ -58,7 +58,7 @@ public class HDFSUtils {
      *
      * @return
      */
-    public static void saveOrcFile(FileSystem fs, String fileName, TreeSet<ComparableList> rows, StandardStructObjectInspector standardStructObjectInspector) throws IOException {
+    public static void saveOrcFile(FileSystem fs, String fileName, List<ComparableList> rows, StandardStructObjectInspector standardStructObjectInspector) throws IOException {
         JobConf conf = new JobConf();
         //FileSystem fs = HDFSUtils.createFileSystem();
         Path outputPath = new Path(fileName);
@@ -108,7 +108,7 @@ public class HDFSUtils {
      * @return
      * @throws Exception
      */
-    public static boolean saveBatchDataHDFSOrc1(FileSystem fs, TreeSet<ComparableList> rows, String date, StandardStructObjectInspector standardStructObjectInspector, String hiveTable) throws Exception {
+    public static boolean saveBatchDataHDFSOrc1(FileSystem fs, List<ComparableList> rows, String date, StandardStructObjectInspector standardStructObjectInspector, String hiveTable) throws Exception {
         // 获取Hive表存储目录
         String hiveTablePath = "/user/hive/warehouse/".concat(hiveTable.replace(".",".db/"));
         logger.info("Hive表存储目录为{}",hiveTablePath);
