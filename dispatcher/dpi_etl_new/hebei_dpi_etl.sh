@@ -31,7 +31,7 @@ function deal_hdfs_file(){
 #  sed -i "s/$/|$tag_limit_version/" $tmp_file
   echo "$file_path copy into $hdfs_path"  
   hdfs dfs -mkdir -p $hdfs_path
-  hdfs dfs -cp $file_path $hdfs_path
+  hdfs dfs -cp -f $file_path $hdfs_path
 #  rm $tmp_file
 }
 

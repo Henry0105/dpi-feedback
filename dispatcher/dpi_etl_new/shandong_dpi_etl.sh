@@ -25,6 +25,8 @@ load_day=$1
 
 file_list=$3
 
+force="true"
+
 function deal_file(){
   cd $base_dir
   file_path=$1
@@ -56,19 +58,22 @@ for file in ${file_list[@]}
 do
  resfile=${file%%,*}
  mappingfile=${file##*,}
+ if [ "$force" = "false" ];then
  actual_resfile_size=`du -b ${resfile} |awk '{print $1}'`
  verf_resfile_size=`cat ${dispatcher_check_files}${resfile}".dispatcher_verf"`
  if [[ actual_resfile_size -eq 0 || actual_resfile_size -gt verf_resfile_size ]]; then
    echo ${actual_resfile_size} > ${dispatcher_check_files}${resfile}".dispatcher_verf"
    exit 1
  fi
- deal_file $resfile
+ #deal_file $resfile
  actual_mappingfile_size=`du -b ${mappingfile} |awk '{print $1}'`
  verf_mappingfile_size=`cat ${dispatcher_check_files}${mappingfile}".dispatcher_verf"`
  if [[ actual_mappingfile_size -eq 0 || actual_mappingfile_size -gt verf_mappingfile_size ]]; then
    echo ${actual_mappingfile_size} > ${dispatcher_check_files}${mappingfile}".dispatcher_verf"
    exit 1
  fi
+ fi
+ deal_file $resfile
  deal_mapping_file $mappingfile
 done
 

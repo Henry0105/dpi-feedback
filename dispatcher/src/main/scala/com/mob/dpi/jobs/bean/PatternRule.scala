@@ -9,6 +9,7 @@ object PatternRule {
 
   def apply(loadDay: String, key: String, value: String): PatternRule = {
 
+    // dispatcher.subdir.guangdong_new_timewindow.timewindow=norm:guangdong_mobile_new/{load_day}/^.*\\d{8}.txt$
     val items = key.split("\\.")
     val pItems = value.split(":")
 
