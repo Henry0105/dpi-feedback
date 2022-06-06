@@ -350,6 +350,24 @@ trait BaseCarrier extends Cacheable with MailService {
     this
   }
 
+  /*
+  CREATE TABLE `carrier_side_cost` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `source` varchar(100) DEFAULT NULL COMMENT '运营商',
+  `load_day` varchar(8) DEFAULT NULL COMMENT '计算日期',
+  `data_day` varchar(8) DEFAULT NULL COMMENT '数据日期',
+  `id_cnt` bigint(20) NOT NULL COMMENT '设备数量',
+  `dup_id_cnt` bigint(20) NOT NULL COMMENT '设备数量(去重)',
+  `cal_cnt` bigint(20) NOT NULL COMMENT '用于计算的设备出数量',
+  `carrier_cost` decimal(24,3) DEFAULT NULL COMMENT '运营商成本(日)',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `sld` (`source`,`load_day`,`data_day`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=37413 DEFAULT CHARSET=utf8;
+
+
+   */
   def upsert2Mysql(): BaseCarrier = {
     if (!toMysql) return this
     val _jdbc = Jdbcs.of()

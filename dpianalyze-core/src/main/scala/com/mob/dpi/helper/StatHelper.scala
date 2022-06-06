@@ -27,6 +27,8 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
   }
 
   def newSourceStatAndGet(param: Param): DpiFeedBackStat = {
+    println(s"dbgparam3:$param")
+
     var srcStats = MySqlDpiStatHelper.getSrcStats(dailySrcQuery(param))
     if (srcStats.isEmpty) {
       val srcStat = build(getDB(param.srcName), getTable(param.srcName), loadDay(param), source(param),
@@ -43,6 +45,7 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
       MySqlDpiStatHelper.updateSrc(originStat)
     }
   }
+
   def newDpiStatAndGet(param: Param, rowType: Int): Array[DpiFeedBackStat] = {
 
     val array = getPartitions(param.srcName, param.partition).map(p => {
@@ -56,7 +59,7 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
     MySqlDpiStatHelper.getPartitionStats(dailyStatsQuery(param, rowType)).toArray
   }
 
-  def buildPartitionStat(param: Param, arr: Array[String], rowType: Int ): DpiFeedBackStat = {
+  def buildPartitionStat(param: Param, arr: Array[String], rowType: Int): DpiFeedBackStat = {
     buildNewObject(getDB(param.srcName), getTable(param.srcName), arr, param.feedbackType,
       getDB(param.dstName), getTable(param.dstName), rowType)
   }
@@ -103,23 +106,27 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
   def statBeforeCal(stat: DpiFeedBackStat): Unit = {
     stat.reEntry += 1
   }
+
   def statNoCal(stat: DpiFeedBackStat): Unit = {
 
   }
+
   def needToCal(stat: DpiFeedBackStat): Boolean = {
     stat.calculated == 0
   }
 
-  def finishDpiStatAndSave(stats : Array[DpiFeedBackStat]): Int = {
+  def finishDpiStatAndSave(stats: Array[DpiFeedBackStat]): Int = {
     MySqlDpiStatHelper.update(stats)
   }
 
   def loadDay(param: Param): String = {
     param.partition.getOrElse("load_day", "")
   }
+
   def source(param: Param): String = {
     param.partition.getOrElse("source", "")
   }
+
   def modelType(param: Param): String = {
     param.partition.getOrElse("model_type", "")
   }
@@ -127,6 +134,7 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
   def parseDay(partitionDay: String): String = {
     partitionDay.split("=")(1)
   }
+
   def buildNewObject(srcDB: String, srcTable: String, arr: Array[String], feedbackType: String,
                      dstDB: String, dstTable: String, rowType: Int): DpiFeedBackStat = {
     build(srcDB, srcTable, getVal(arr(0)), getVal(arr(1)), getVal(arr(2)),
@@ -155,7 +163,7 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
   }
 
   def getKV(str: String): (String, String) = {
-    str.split("=")(0)->str.split("=")(1)
+    str.split("=")(0) -> str.split("=")(1)
   }
 
   def srcPartitionExist(param: Param): Boolean = {
@@ -195,15 +203,18 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
   }
 
   def getTableAndDB(name: String): (String, String) = {
-    name.split("\\.")(0)->name.split("\\.")(1)
+    name.split("\\.")(0) -> name.split("\\.")(1)
   }
 
   def doWithStatus(param: Param, f: DpiFeedBackStat => Unit): Unit = {
+    println(s"dbgparam2:$param")
+
     // 创建源的状态
     val originStat = newSourceStatAndGet(param)
     if ("guangdong_mobile_new".equals(param.partition("source"))) {
       param.partition += ("source" -> "guangdong_mobile")
     }
+    println(s"originStat = ${originStat.toString}")
     println(s"dbgparam:$param")
     // 创建并返回源子分区状态
     val stats = newDpiStatAndGet(param, 1)
@@ -211,6 +222,7 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
       maybeUpdateSrcStat(originStat)
       stats.foreach(statBeforeCal)
       stats.foreach(stat => {
+        println(s"---------- stats: originStat = ${originStat.toString}")
         if (param.force || needToCal(stat)) {
           f(stat)
           statAfterCal(stat)
