@@ -55,5 +55,4 @@ do
 done
 
 cd $home_dir
-hive -e "msck repair table ${hive_db}.${hive_table}"
-
+hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"
