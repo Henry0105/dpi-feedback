@@ -31,7 +31,7 @@ function deal_file(){
   cd $home_dir
   tmp_file=./${file_name}
   cat $file_path > $tmp_file
-  sed -i '1d' $tmp_file
+  # sed -i '1d' $tmp_file
   #sed -i "s/$/|$tag_limit_version/" $tmp_file
   hdfs dfs -mkdir -p $hdfs_path
   hdfs dfs -put -f $tmp_file $hdfs_path
