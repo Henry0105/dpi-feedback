@@ -34,7 +34,7 @@ class SenderManager(list: List[FileInfo]) {
 
 
   // 单文件的任务
-  def tasksGen() = {
+  def tasksGen(): Unit = {
 
 
     list.filter(fi => {
@@ -45,20 +45,23 @@ class SenderManager(list: List[FileInfo]) {
         params += defaultFileInfo.loadDay
         params += defaultFileInfo.modelType
         params += defaultFileInfo.resultFile
-        waiting_send_tasks += TaskInfo(PropUtil.getProperty("dispatcher.task." + defaultFileInfo.taskKeyGen()), params.toList, "fangym", defaultFileInfo)
+        waiting_send_tasks += TaskInfo(PropUtil.getProperty("dispatcher.task." + defaultFileInfo.taskKeyGen()),
+          params.toList, "fangym", defaultFileInfo)
       case mappingFileInfo if mappingFileInfo.producerMode.startsWith("mapping") =>
         val params = mutable.Buffer.empty[String]
         params += mappingFileInfo.loadDay
         params += mappingFileInfo.modelType
         params += mappingFileInfo.resultFile + "," + mappingFileInfo.mappingFile
-        if (mappingFileInfo.resultFile.nonEmpty && mappingFileInfo.mappingFile.nonEmpty)
-          waiting_send_tasks += TaskInfo(PropUtil.getProperty("dispatcher.task." + mappingFileInfo.taskKeyGen()), params.toList, "fangym", mappingFileInfo)
+        if (mappingFileInfo.resultFile.nonEmpty && mappingFileInfo.mappingFile.nonEmpty) {
+          waiting_send_tasks += TaskInfo(PropUtil.getProperty("dispatcher.task." + mappingFileInfo.taskKeyGen()),
+            params.toList, "fangym", mappingFileInfo)
+        }
     }
 
   }
 
   // 聚合文件的任务
-  def tasksGenV2() = {
+  def tasksGenV2(): Unit = {
 
     case class FileKey(source: String, modelType: String)
 
@@ -81,14 +84,15 @@ class SenderManager(list: List[FileInfo]) {
         params += fileInfoWithAggr.loadDay
         params += fileInfoWithAggr.modelType
         params += fileInfoWithAggr.rmFiles
-        waiting_send_tasks += TaskInfo(PropUtil.getProperty("dispatcher.task." + fileInfoWithAggr.taskKeyGen()), params.toList, "fangym", fileInfoWithAggr)
+        waiting_send_tasks += TaskInfo(PropUtil.getProperty("dispatcher.task." + fileInfoWithAggr.taskKeyGen()),
+          params.toList, "fangym", fileInfoWithAggr)
       case _ =>
         println("no match FileInfoWithAggr.")
     }
 
   }
 
-  def launchTasks() = {
+  def launchTasks(): Unit = {
     val loop = new Breaks
     if (waiting_send_tasks.isEmpty) {
       println("no task need to request.")
