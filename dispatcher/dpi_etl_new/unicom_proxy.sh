@@ -2,11 +2,12 @@
 set -x -e
 
 cd `dirname $0`
-hive_db=dm_dpi_master_test
-hive_table=ods_dpi_mkt_feedback_incr
 home_dir=`pwd`
-base_dir="/data/dpi_test/data/unicom_proxy"
-dispatcher_check_files=/home/dpi_test/dpi_feedback/dispatcher/check_files
+source $home_dir/conf/application.properties
+hive_db=$incr_hive_db
+hive_table=ods_dpi_mkt_feedback_incr
+base_dir="${base_dir}/unicom_proxy"
+dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=unicom_proxy
 model_type=$2
@@ -31,7 +32,7 @@ function deal_file(){
   cd $home_dir
   tmp_file=./${file_name}
   cat $file_path > $tmp_file
-  # sed -i '1d' $tmp_file
+  #sed -i '1d' $tmp_file
   #sed -i "s/$/|$tag_limit_version/" $tmp_file
   hdfs dfs -mkdir -p $hdfs_path
   hdfs dfs -put -f $tmp_file $hdfs_path
@@ -55,4 +56,5 @@ do
 done
 
 cd $home_dir
+#hive -e "msck repair table ${hive_db}.${hive_table}"
 hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"
