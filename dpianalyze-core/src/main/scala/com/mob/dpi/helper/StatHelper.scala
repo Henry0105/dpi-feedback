@@ -27,8 +27,6 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
   }
 
   def newSourceStatAndGet(param: Param): DpiFeedBackStat = {
-    println(s"dbgparam3:$param")
-
     var srcStats = MySqlDpiStatHelper.getSrcStats(dailySrcQuery(param))
     if (srcStats.isEmpty) {
       val srcStat = build(getDB(param.srcName), getTable(param.srcName), loadDay(param), source(param),
@@ -207,8 +205,6 @@ class StatHelper(@transient val spark: SparkSession) extends Serializable {
   }
 
   def doWithStatus(param: Param, f: DpiFeedBackStat => Unit): Unit = {
-    println(s"dbgparam2:$param")
-
     // 创建源的状态
     val originStat = newSourceStatAndGet(param)
     if ("guangdong_mobile_new".equals(param.partition("source"))) {

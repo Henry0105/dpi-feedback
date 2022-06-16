@@ -17,14 +17,11 @@ import org.apache.spark.sql.SparkSession
 import scala.collection.mutable
 
 case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
-  println(s"dbgparam-1:$param")
   val params: Params = jobContext.params
   val partition: String =
     s"day=${params.day}/" +
       s"source=${params.source}/" +
       s"model_type=${params.modelType}"
-  println(s"partition-1:$partition")
-
 
   val partMap = Map("load_day" -> params.day, "source" -> params.source, "model_type" -> params.modelType)
   val idType: String = if (params.modelType.equals("idfa")) "idfa" else "imei"
@@ -39,8 +36,6 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
   import helper._
 
   def udf(): Unit = {
-    println(s"partition-2:$partition")
-
     spark.udf.register("recomputationImei", ReturnImei15.evaluate _)
 
     // 山东aes解密
@@ -63,7 +58,6 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
 
     // udf 注册
     udf()
-    println(s"dbgparam1:$param")
     doWithStatus(param, calculate)
 
     spark.stop()
@@ -144,14 +138,16 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     oriDF.createOrReplaceTempView("origin_data")
 
 
+    val sourcePartition = source match {
+      case "guangdong_mobile_new" => "guangdong_mobile"
+      case "unicom_proxy" => "unicom"
+      case "jiangsu_mobile_new" => "jiangsu_mobile"
+      case "guangdong_unicom_proxy" => "guangdong_mobile"
+      case _ => source
+    }
+
     val mappingDF = spark.table(PropUtils.HIVE_TABLE_DM_DPI_EXT_ID_MAPPING)
-      .where(s"id_type='${idType}' and source='${
-        if (source.equals("guangdong_mobile_new")) {
-          "guangdong_mobile"
-        } else {
-          source.replace("unicom_proxy", "unicom")
-        }
-      }' and version='${lastVersion()}'")
+      .where(s"id_type='${idType}' and source='$sourcePartition' and version='${lastVersion()}'")
     if (oriCnt > 0 && oriCnt < 5000000) {
       import spark.sparkContext.broadcast
       val bf = broadcast(oriDF.stat.bloomFilter("id", oriCnt, 0.01))
@@ -187,8 +183,6 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
 
     // 拆分tag
     if (source.equals("unicom_proxy")) {
-      println(s"dbgparam-1.1:$param")
-
       sql(
         s"""
            |select id
@@ -215,8 +209,10 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
         s"""
            |select id
            |       ,trimQuotes(split(tag_exp,'\\:')[0]) as tag
-           |       ,case when size(split(tag_exp,'\\:')) > 1 then split(tag_exp,'\\:')[1] else 1 end as times
-           |       ,case when size(split(tag_exp,'\\:')) > 2 then split(tag_exp,'\\:')[2] else 1 end as merge_times
+           |       ,cast(round(case when size(split(tag_exp,'\\:')) > 1 then split(tag_exp,'\\:')[1] else 1 end) as int)
+           |        as times
+           |       ,cast(round(case when size(split(tag_exp,'\\:')) > 2 then split(tag_exp,'\\:')[2] else 1 end) as int)
+           |        as merge_times
            |       ,value_md5_14
            |       ,pid
            |       ,day
@@ -239,8 +235,6 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
 
     // tag mapping
     if (params.mapping) {
-      println(s"dbgparam-1.2:$param")
-
       sql(
         s"""
            |select id
@@ -302,7 +296,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
          |        plat,
          |        pid_ltm,
          |        province_cn,
-         |        carrier
+         |        carrier,
+         |        from_unixtime(unix_timestamp(),"yyyy-MM-dd HH:mm:ss") as incr_time
          |from $preSinkTable
          |where tag IS NOT NULL
        """.stripMargin
@@ -354,8 +349,6 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     }
   }
 
-  println(s"dbgparam-2:$param")
-
   /* --tag mapping code begin-- */
 
   // Type2: tag -> newTag
@@ -373,6 +366,24 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
   var jsonTag: String = _
 
   SourceType.withName(params.source) match {
+    case GUANGDONG_UNICOM_PROXY =>
+      tm = ""
+      tagSqlFragment = ""
+      tagValueMappingSqlFragment = " tag "
+      idSqlFragment = " trim(id) "
+      tagLimitVersionFragment = " '' "
+      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
+    case JIANGSU_MOBILE_NEW =>
+      tm = ""
+      tagSqlFragment = ""
+      tagValueMappingSqlFragment = " tag "
+      idSqlFragment = " trim(id) "
+      tagLimitVersionFragment = " '' "
+      param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR, partMap,
+        PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
+      jsonTable = "0"
     case UNICOM_PROXY =>
       tm = ""
       tagSqlFragment = ""
@@ -473,7 +484,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
     case GUANGDONG =>
       tm = ""
       tagSqlFragment = ""
-      tagValueMappingSqlFragment = " concat(trim(split(split(data, '\\\\|')[1], '#')[0]), ':', trim(split(split(data, '\\\\|')[1],'#')[1])) "
+      tagValueMappingSqlFragment = " concat(trim(split(split(data, '\\\\|')[1], '#')[0]), ':'," +
+        " trim(split(split(data, '\\\\|')[1],'#')[1])) "
       idSqlFragment = " trim(split(data, '\\\\|')[0]) "
       tagLimitVersionFragment = " '' "
       param = Param(PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR_GD, partMap,
@@ -489,11 +501,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
         PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT, "Tag", params.force)
       jsonTable = "0"
   }
-  println(s"dbgparam-3:$param")
-
 
   if (StringUtils.isNoneBlank(tm) && params.mapping) {
-    println(s"dbgparam-4:$param")
     spark.sql(
       s"""
          |select tag, tag_new, day
@@ -516,8 +525,6 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
   }
 
   def tagMapping(tag: String, day: String): String = {
-    println(s"dbgparam-5:$param")
-
     if (StringUtils.isBlank(tag) || StringUtils.isBlank(day)) {
       ""
     } else {

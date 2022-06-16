@@ -24,8 +24,27 @@ object CarrierFactory {
       case ZHEJIANG => createZhejiang
       case SICHUAN => createSichuan
       case UNICOM_PROXY => createUnicomProxy
+      case JIANGSU_MOBILE_NEW => createJiangsuMobileNew
+      case GUANGDONG_UNICOM_PROXY => createGuangdongUnicomProxy
     }
 
+  }
+
+
+  private def createJiangsuMobileNew(implicit cxt: JobContext): JiangsuMobileNew = {
+    val other = Map("local" -> "false", "incrTab" -> s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}",
+      "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
+      "outOfModels" -> "") ++ cxt.otherArgs
+    JiangsuMobileNew(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType,
+      cxt.params.day, other), Some(cxt.spark))
+  }
+
+  private def createGuangdongUnicomProxy(implicit cxt: JobContext): GuangdongUnicomProxy = {
+    val other = Map("local" -> "false", "incrTab" -> s"${PropUtils.HIVE_TABLE_ODS_DPI_MKT_FEEDBACK_INCR}",
+      "tagTab" -> s"${PropUtils.HIVE_TABLE_RP_DPI_MKT_DEVICE_TAG_RESULT}",
+      "outOfModels" -> "") ++ cxt.otherArgs
+    GuangdongUnicomProxy(ComParam(cxt.params.day, cxt.params.source, cxt.params.modelType,
+      cxt.params.day, other), Some(cxt.spark))
   }
 
   private def createUnicomProxy(implicit cxt: JobContext): UnicomProxy = {

@@ -412,6 +412,7 @@ trait BaseCarrier extends Cacheable with MailService {
            |from ${tagTab}
            |where load_day='${endDay}' and source='${carrier}'
            |${if (excludeModelOF.isEmpty){"and 1 = 1"} else {s"and model_type not in (${excludeModelOF.mkString("'","','","'")})"} }
+           |
            |group by load_day, source, day, tag
            |""".stripMargin)
 
