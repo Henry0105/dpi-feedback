@@ -31,7 +31,7 @@ function deal_hdfs_file(){
 #  sed -i "s/$/|$tag_limit_version/" $tmp_file
   echo "$file_path copy into $hdfs_path"  
   hdfs dfs -mkdir -p $hdfs_path
-  hdfs dfs -cp $file_path $hdfs_path
+  hdfs dfs -cp -f $file_path $hdfs_path
 #  rm $tmp_file
 }
 
@@ -53,5 +53,4 @@ do
 done
 
 cd $home_dir
-hive -e "msck repair table ${hive_db}.${hive_table}"
-
+hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"

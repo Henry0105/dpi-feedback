@@ -70,6 +70,7 @@ object Bootstrap {
 
   def run(params: Params): Unit = {
 
+    println(s" params = $params")
     val jobContext = JobContext(params)
 
     params.jobs match {
@@ -88,7 +89,7 @@ object Bootstrap {
       case "7" =>
         TagOfflineInfoJob(jobContext).run()
       case _ =>
-        throw new UnsupportedOperationException(s"unsupported jobs[${ params.jobs }], " +
+        throw new UnsupportedOperationException(s"unsupported jobs[${params.jobs}], " +
           s"[1-MappingValue]")
     }
   }

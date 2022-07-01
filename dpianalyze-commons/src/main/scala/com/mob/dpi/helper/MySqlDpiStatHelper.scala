@@ -20,6 +20,7 @@ object MySqlDpiStatHelper {
                              var dstTable: String = "", var rowType: Int = 1,
                              var srcDiscoverTime: Timestamp = null, var statVersion: Timestamp = null,
                              var createTime : Timestamp = null, var updateTime : Timestamp = null) {
+
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     def srcTableNameWithDB: String = {
       srcDB.concat(".").concat(srcTable)

@@ -25,6 +25,8 @@ load_day=$1
 
 file_list=$3
 
+force="true"
+
 function deal_file(){
   cd $base_dir
   file_path=$1
@@ -56,22 +58,28 @@ for file in ${file_list[@]}
 do
  resfile=${file%%,*}
  mappingfile=${file##*,}
+ if [ "$force" = "false" ];then
  actual_resfile_size=`du -b ${resfile} |awk '{print $1}'`
  verf_resfile_size=`cat ${dispatcher_check_files}${resfile}".dispatcher_verf"`
  if [[ actual_resfile_size -eq 0 || actual_resfile_size -gt verf_resfile_size ]]; then
    echo ${actual_resfile_size} > ${dispatcher_check_files}${resfile}".dispatcher_verf"
    exit 1
  fi
- deal_file $resfile
+ #deal_file $resfile
  actual_mappingfile_size=`du -b ${mappingfile} |awk '{print $1}'`
  verf_mappingfile_size=`cat ${dispatcher_check_files}${mappingfile}".dispatcher_verf"`
  if [[ actual_mappingfile_size -eq 0 || actual_mappingfile_size -gt verf_mappingfile_size ]]; then
    echo ${actual_mappingfile_size} > ${dispatcher_check_files}${mappingfile}".dispatcher_verf"
    exit 1
  fi
+ fi
+ deal_file $resfile
  deal_mapping_file $mappingfile
 done
 
 cd $home_dir
-hive -e "msck repair table ${hive_db}.${hive_table};msck repair table ${hive_mapping_db}.${hive_mapping_table}"
+hive -e "
+alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');
+alter table ${hive_mapping_db}.${hive_mapping_table} add  if not exists partition(load_day='$load_day',
+source='$data_source',model_type='$model_type',day='$mapping_day');"
 

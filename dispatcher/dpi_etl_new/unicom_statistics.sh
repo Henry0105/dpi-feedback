@@ -47,12 +47,11 @@ do
  actual_file_size=`du -b ${file} |awk '{print $1}'`
  verf_file_size=`cat ${dispatcher_check_files}${file}".dispatcher_verf"`
  if [[ actual_file_size -eq 0 || actual_file_size -gt verf_file_size ]]; then
-   echo ${acture_file_size} > ${dispatcher_check_files}${file}".dispatcher_verf"
+   echo ${actual_file_size} > ${dispatcher_check_files}${file}".dispatcher_verf"
    exit 1
  fi
  deal_file ${file}
 done
 
 cd ${home_dir}
-hive -e "msck repair table ${hive_db}.${hive_table}"
-
+hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"
