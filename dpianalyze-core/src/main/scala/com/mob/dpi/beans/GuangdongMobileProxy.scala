@@ -9,7 +9,7 @@ import org.apache.spark.sql.SparkSession
  * @createTime 2022年06月13日 11:28:00
  */
 
-case class GuangdongUnicomProxy(override val comParam: ComParam, override val sparkOpt: Option[SparkSession] = None)
+case class GuangdongMobileProxy(override val comParam: ComParam, override val sparkOpt: Option[SparkSession] = None)
   extends BaseCarrier {
   override protected val calPrice: BigDecimal = 0.0
   override protected val dataPrice: BigDecimal = 0.01

@@ -142,7 +142,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
       case "guangdong_mobile_new" => "guangdong_mobile"
       case "unicom_proxy" => "unicom"
       case "jiangsu_mobile_new" => "jiangsu_mobile"
-      case "guangdong_unicom_proxy" => "guangdong_mobile"
+      case "guangdong_mobile_proxy" => "guangdong_mobile"
       case _ => source
     }
 
@@ -366,7 +366,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
   var jsonTag: String = _
 
   SourceType.withName(params.source) match {
-    case GUANGDONG_UNICOM_PROXY =>
+    case GUANGDONG_MOBILE_PROXY =>
       tm = ""
       tagSqlFragment = ""
       tagValueMappingSqlFragment = " tag "
