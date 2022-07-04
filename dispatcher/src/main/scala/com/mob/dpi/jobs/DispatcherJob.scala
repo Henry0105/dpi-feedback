@@ -9,7 +9,8 @@ case class DispatcherJob(params: Params) {
 
   val loadDay = params.day
   // 1.文件生成
-  val fs = new FileScanner(PropUtil.getProperty("dispatcher.data.root"), PropUtil.getProperty("dispatcher.data.hdfs.root"))
+  val fs = new FileScanner(PropUtil.getProperty("dispatcher.data.root"),
+    PropUtil.getProperty("dispatcher.data.hdfs.root"))
   val filePatterns: List[PatternRule] = parsePattern()
   val allTargetFiles = fs.allTargetFiles(filePatterns)
 

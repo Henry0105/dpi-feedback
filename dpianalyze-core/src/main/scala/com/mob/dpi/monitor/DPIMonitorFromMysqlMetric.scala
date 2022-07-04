@@ -95,7 +95,7 @@ case class DPIMonitorFromMysqlMetric(jobContext: JobContext) {
     val delayHour = ApplicationUtils.WARNING_CXT.getOrElse(stat.source, Array.empty[Int])(0)
 
     if (stat.warnMailLastTime == null && stat.srcDiscoverTime == null &&
-      backoffTime(stat.createTime, delayHour) ) {
+      backoffTime(stat.createTime, delayHour)) {
       stat.warnMailLastTime = new Timestamp(new Date().getTime())
       true
     } else {
@@ -124,7 +124,7 @@ case class DPIMonitorFromMysqlMetric(jobContext: JobContext) {
   // 退避时间
   def backoffTime(timestamp: Timestamp, hour: Long): Boolean = {
     println(s"BackoffTime : $timestamp|$hour")
-    new Date().getTime - timestamp.getTime  - hour*1000*3600 > 0
+    new Date().getTime - timestamp.getTime - hour * 1000 * 3600 > 0
   }
 
   def maybeMail(stats: Array[DpiFeedBackStat]): Boolean = {
@@ -152,7 +152,7 @@ case class DPIMonitorFromMysqlMetric(jobContext: JobContext) {
   }
 
   def deleteDataN(): Unit = {
-    val ts : Long = new Date().getTime-ApplicationUtils.MYSQL_DATA_REMAIN_HOUR*3600*1000
+    val ts: Long = new Date().getTime - ApplicationUtils.MYSQL_DATA_REMAIN_HOUR * 3600 * 1000
     println("DeleteDataN: " + MySqlDpiStatHelper.deleteBeforeN(new Timestamp(ts)))
   }
 }

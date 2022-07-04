@@ -12,7 +12,7 @@ class NormScanMode(root: String) extends ScanMode {
   // henan_mobile/download/data/{load_day}/business_2_result_{data_day}_gen.txt
   override def scan(pattern: PatternRule, fileInfoProducer: FileInfoProducer): List[FileInfo] = {
     var loadDay = pattern.loadDay
-    if (pattern.resultDir.contains("unicom_proxy")) {
+    if (pattern.source.equals("unicom_proxy")) {
       val date = new SimpleDateFormat("yyyyMMdd").parse(loadDay)
       val simpleDateFormat2 = new SimpleDateFormat("yyyy-MM-dd")
       loadDay = simpleDateFormat2.format(date)
