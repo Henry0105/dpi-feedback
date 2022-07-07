@@ -20,7 +20,6 @@ object Bootstrap {
         .text("1: dispatcher")
         .required()
         .action((x, c) => c.copy(job = x))
-
       opt[String]("day").abbr("d")
         .text("cal date with yyyyMMdd format, default: current date")
         .required()
