@@ -2,11 +2,11 @@
 set -x -e
 
 cd `dirname $0`
-hive_db=dw_dpi_feedback
+hive_db=dm_dpi_master_test
 #hive_table=ods_dpi_mkt_feedback_incr_sb
 hive_table=ods_dpi_mkt_feedback_incr
 home_dir=`pwd`
-base_dir="/data/dpi/unicom/download/667673052142845952/"
+base_dir="/data/dpi_test/unicom_new/download/667673052142845952/"
 dispatcher_check_files=/home/dpi/dpi_feedback/dispatcher/check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=unicom
@@ -23,8 +23,7 @@ function deal_file(){
   cd $base_dir
   file_path=$1
   file_name=${file_path##*/}
-  tag_limit_version=$(echo $file_name|awk -F '_' '{print $2}')
-  day=$(echo $file_name|awk -F '_' '{print $4}'|awk -F '.' '{print $1}')
+  day=$(echo $file_name|awk -F '_' '{print $7}'|awk -F '.' '{print $1}')
   hdfs_path=$hive_path/load_day=$load_day/source=$data_source/model_type=$model_type/day=$day
   echo "$file_path put into $hdfs_path"
   cd $home_dir
