@@ -27,6 +27,15 @@
             </properties>
         </profile>
 
+
+        <!--线上环境-->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <env>dev</env>
+            </properties>
+        </profile>
+
         <profile>
             <id>local</id>
             <properties>
