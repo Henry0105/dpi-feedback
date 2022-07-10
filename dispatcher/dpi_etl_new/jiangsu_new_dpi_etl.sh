@@ -5,7 +5,7 @@ home_dir=`pwd`
 source $home_dir/conf/application.properties
 hive_db=$incr_hive_db
 hive_table=ods_dpi_mkt_feedback_incr
-base_dir="${base_dir}/dpiFeedback/jsyd_mobile/download"
+base_dir="/data/dpiFeedback/jsyd_mobile/download"
 dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=jiangsu_mobile_new
