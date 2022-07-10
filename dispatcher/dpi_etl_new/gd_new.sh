@@ -7,7 +7,7 @@ cd `dirname $0`
 hive_db=$incr_hive_db
 #hive_table=ods_dpi_mkt_feedback_incr_sb
 hive_table=ods_dpi_mkt_feedback_incr
-base_dir="${base_dir}/guangdong_mobile_new"
+base_dir="${base_dir}/dpi/guangdong_mobile_new"
 dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=guangdong_mobile
