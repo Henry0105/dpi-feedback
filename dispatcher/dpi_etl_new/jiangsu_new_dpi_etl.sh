@@ -25,7 +25,7 @@ function deal_file(){
   file_path=$1
   file_name=${file_path##*/}
   tag_limit_version=$(echo $file_name|awk -F '_' '{print $2}')
-  day=$(date -d "$load_day 2 day ago"  +%Y%m%d)
+  day=$(date -d "$load_day 1 day ago"  +%Y%m%d)
   hdfs_path=$hive_path/load_day=$load_day/source=$data_source/model_type=$model_type/day=$day
   echo "$file_path put into $hdfs_path"
   cd $home_dir
