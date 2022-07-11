@@ -36,7 +36,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/dpi_etl_new/${env}</directory>
+            <directory>${project.basedir}/dpi_etl_new/</directory>
             <outputDirectory>/sbin</outputDirectory>
             <fileMode>0755</fileMode>
         </fileSet>
