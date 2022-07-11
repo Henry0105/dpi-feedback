@@ -2,11 +2,13 @@
 set -x -e
 
 sbin_home=$(cd `dirname $0`;pwd)
-cd  ../
+cd  $sbin_home/../
 home_dir=`pwd`
 source $home_dir/conf/application.properties
 hive_db=${dpi_feedback_db}
 hive_table=ods_dpi_mkt_feedback_incr
+
+
 
 
 #base_dir="/data/dpi/unicom/download/667673052142845952/"
