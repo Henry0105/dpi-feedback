@@ -3,38 +3,38 @@ set -x -e
 
 cd `dirname $0`
 home_dir=`pwd`
-source $home_dir/conf/application.properties
-hive_db=$incr_hive_db
+source $home_dir/../conf/dispatcher.properties
+hive_db=${dpi.feedback.db}
 hive_table=ods_dpi_mkt_feedback_incr
-base_dir="${base_dir}/dpiFeedback/gdyd/download/"
-dispatcher_check_files=$dispatcher_check_files
+
+
+base_dir="/data/dpi/unicom/download/667673052142845952/"
+dispatcher_check_files=${dispathcer.check_files}
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
-data_source=guangdong_unicom_proxy
-model_type=$2
+data_source=unicom
+
 deal_file_num=0
 cd $base_dir
 
-load_day=$1
 
+load_day=$1
+model_type=$2
 file_list=$3
 
-echo ==============1:$1=========2:$2========3:$3
-
-
 function deal_file(){
-  cd $base_dir
   file_path=$1
   file_name=${file_path##*/}
   tag_limit_version=$(echo $file_name|awk -F '_' '{print $2}')
-  day=$(date -d "$load_day 2 day ago"  +%Y%m%d)
+  #day=$(echo $file_name|awk -F '_' '{print $4}'|awk -F '.' '{print $1}')
+  day=$(date -d "$load_day 1 day ago"  +%Y%m%d)
+
   hdfs_path=$hive_path/load_day=$load_day/source=$data_source/model_type=$model_type/day=$day
   echo "$file_path put into $hdfs_path"
   cd $home_dir
-  tmp_file=./${file_name}
+  tmp_file=./${data_source}_${model_type}_$day.txt
   cat $file_path > $tmp_file
-  #sed -i '1d' $tmp_file
-  #sed -i "s/$/|$tag_limit_version/" $tmp_file
-  sed -i "s#,#:#g" $tmp_file
+  sed -i '1d' $tmp_file
+  sed -i "s/$/|$tag_limit_version/" $tmp_file
   hdfs dfs -mkdir -p $hdfs_path
   hdfs dfs -put -f $tmp_file $hdfs_path
   rm $tmp_file
@@ -57,5 +57,4 @@ do
 done
 
 cd $home_dir
-#hive -e "msck repair table ${hive_db}.${hive_table}"
 hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"

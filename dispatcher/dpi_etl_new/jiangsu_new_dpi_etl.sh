@@ -1,19 +1,17 @@
 #!/bin/bash
 set -x -e
-
 cd `dirname $0`
 home_dir=`pwd`
 source $home_dir/conf/application.properties
 hive_db=$incr_hive_db
 hive_table=ods_dpi_mkt_feedback_incr
-base_dir="${base_dir}/unicom_new"
+base_dir="/data/dpiFeedback/jsyd_mobile/download"
 dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
-data_source=unicom
+data_source=jiangsu_mobile_new
 model_type=$2
 deal_file_num=0
 cd $base_dir
-
 
 load_day=$1
 
@@ -21,10 +19,12 @@ file_list=$3
 
 echo ==============1:$1=========2:$2========3:$3
 
+
 function deal_file(){
   cd $base_dir
   file_path=$1
   file_name=${file_path##*/}
+  tag_limit_version=$(echo $file_name|awk -F '_' '{print $2}')
   day=$(date -d "$load_day 2 day ago"  +%Y%m%d)
   hdfs_path=$hive_path/load_day=$load_day/source=$data_source/model_type=$model_type/day=$day
   echo "$file_path put into $hdfs_path"
@@ -55,5 +55,5 @@ do
 done
 
 cd $home_dir
+#hive -e "msck repair table ${hive_db}.${hive_table}"
 hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"
-

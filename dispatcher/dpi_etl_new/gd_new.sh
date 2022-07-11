@@ -1,15 +1,16 @@
 #!/bin/bash
 set -x -e
 
-cd `dirname $0`
 home_dir=`pwd`
 source $home_dir/conf/application.properties
+cd `dirname $0`
 hive_db=$incr_hive_db
+#hive_table=ods_dpi_mkt_feedback_incr_sb
 hive_table=ods_dpi_mkt_feedback_incr
-base_dir="${base_dir}/dpiFeedback/gdyd/download/"
+base_dir="/data/dpi/guangdong_mobile_new"
 dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
-data_source=guangdong_unicom_proxy
+data_source=guangdong_mobile
 model_type=$2
 deal_file_num=0
 cd $base_dir
@@ -32,9 +33,9 @@ function deal_file(){
   cd $home_dir
   tmp_file=./${file_name}
   cat $file_path > $tmp_file
-  #sed -i '1d' $tmp_file
-  #sed -i "s/$/|$tag_limit_version/" $tmp_file
+  sed -i '1d' $tmp_file
   sed -i "s#,#:#g" $tmp_file
+  #sed -i "s/$/|$tag_limit_version/" $tmp_file
   hdfs dfs -mkdir -p $hdfs_path
   hdfs dfs -put -f $tmp_file $hdfs_path
   rm $tmp_file
