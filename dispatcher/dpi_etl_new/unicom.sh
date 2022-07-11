@@ -1,20 +1,20 @@
 #!/bin/bash
 set -x -e
 
-cd `dirname $0`
+sbin_home=$(cd `dirname $0`;pwd)
+cd  ../
 home_dir=`pwd`
-source $home_dir/../conf/dispatcher.properties
-hive_db=${dpi.feedback.db}
+source $home_dir/conf/application.properties
+hive_db=${dpi_feedback_db}
 hive_table=ods_dpi_mkt_feedback_incr
 
 
-base_dir="/data/dpi/unicom/download/667673052142845952/"
-dispatcher_check_files=${dispathcer.check_files}
+#base_dir="/data/dpi/unicom/download/667673052142845952/"
+dispatcher_check_files=${dispatcher_check_files}
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=unicom
 
 deal_file_num=0
-cd $base_dir
 
 
 load_day=$1

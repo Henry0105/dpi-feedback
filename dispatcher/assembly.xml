@@ -46,7 +46,7 @@
             <directory>${project.basedir}/target/classes</directory>
             <outputDirectory>/conf</outputDirectory>
             <includes>
-                <include>dispatcher.properties</include>
+                <include>*.properties</include>
             </includes>
         </fileSet>
     </fileSets>
