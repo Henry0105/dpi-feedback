@@ -24,7 +24,6 @@ file_list=$3
 function deal_file(){
   file_path=$1
   file_name=${file_path##*/}
-  tag_limit_version=$(echo $file_name|awk -F '_' '{print $2}')
   #day=$(echo $file_name|awk -F '_' '{print $4}'|awk -F '.' '{print $1}')
   day=$(date -d "$load_day 1 day ago"  +%Y%m%d)
 
@@ -33,8 +32,6 @@ function deal_file(){
   cd $home_dir
   tmp_file=./${data_source}_${model_type}_$day.txt
   cat $file_path > $tmp_file
-  sed -i '1d' $tmp_file
-  sed -i "s/$/|$tag_limit_version/" $tmp_file
   hdfs dfs -mkdir -p $hdfs_path
   hdfs dfs -put -f $tmp_file $hdfs_path
   rm $tmp_file
