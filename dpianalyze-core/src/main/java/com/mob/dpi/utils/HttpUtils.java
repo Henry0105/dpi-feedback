@@ -66,7 +66,7 @@ public class HttpUtils {
 
         // gw_id一样的有多条数据，不能去重
         List<ComparableList> rows = new ArrayList<ComparableList>();
-        for (int i=0;i<1000000;i++){
+        for (int i=0;i<10000000;i++){
             ComparableList<Object> row = new ComparableList<Object>();
 
             String getUrl = url + "/kv/get?token=" + token + "&database=" + dbName + "&table=" + tableName + "&key=job-eu_normal_" + date + "_".concat(String.valueOf(i));
@@ -129,10 +129,76 @@ public class HttpUtils {
 
         // gw_id一样的有多条数据，不能去重
         List<ComparableList> rows = new ArrayList<ComparableList>();
-        for (int i=0;i<1000000;i++){
+        for (int i=0;i<10000000;i++){
             ComparableList<Object> row = new ComparableList<Object>();
 
             String getUrl = url + "/kv/get?token=" + token + "&database=" + dbName + "&table=" + tableName + "&key=job-eu_02_normal_" + date + "_".concat(String.valueOf(i));
+            String getHtml = get(getUrl);
+            JSONObject resultJson = JSONObject.parseObject(getHtml);
+            //System.out.println(resultJson);
+
+            Object result = resultJson.get("result");
+            if(result != null){
+                JSONObject json = JSONObject.parseObject(result.toString());
+                String res = json.getString("value");
+                System.out.println(res);
+
+                String[] columns = res.split("\\|@\\|");
+                for(int j=0;j<columns.length;j++){
+                    String type = columnAndTypes[j].split(":")[1];
+                    if("Boolean".equals(type)){
+                        row.add(Boolean.valueOf(columns[j]));
+                    } else if("Int".equals(type)) {
+                        row.add(Integer.valueOf(columns[j].split("\\.")[0]));
+                    } else {
+                        row.add(columns[j]);
+                    }
+                }
+
+                rows.add(row);
+            } else {
+                break;
+            }
+        }
+
+        return rows;
+    }
+
+    /**
+     * 获取指定日期的数据
+     *
+     * @param key
+     * @param schema
+     * @return
+     * @throws Exception
+     */
+    public static List<ComparableList> getApiDataHostDay(String key,String schema) throws Exception {
+        // 接口方参数
+        String url = "http://116.236.4.126:80";
+        String username = "u_lx_datgrp6";
+        String password = "u_lx_datgrp6@189";
+        String apiKey = "OLsUbMEjr8of9av6x4PTzmOznXmYiBmk";
+
+        String dbName = "u_lx_datgrp6";
+        String tableName = "lx_info_nf_20";
+
+        String[] columnAndTypes = schema.split(",");
+
+
+        // 获取token
+        long time = System.currentTimeMillis();
+        String sign = sign(MD5Util.MD5(password), username + apiKey + time);
+        String tokenUrl = url + "/getToken?apiKey=" + apiKey + "&sign=" + sign + "&timestamp=" + time;
+        String tokenHtml = HttpUtils.get(tokenUrl);
+        JSONObject tokenJson = JSONObject.parseObject(tokenHtml);
+        String token = tokenJson.getString("result");
+
+        // gw_id一样的有多条数据，不能去重
+        List<ComparableList> rows = new ArrayList<ComparableList>();
+        for (int i=0;i<10000000;i++){
+            ComparableList<Object> row = new ComparableList<Object>();
+
+            String getUrl = url + "/kv/get?token=" + token + "&database=" + dbName + "&table=" + tableName + "&key=" + key + "_".concat(String.valueOf(i));
             String getHtml = get(getUrl);
             JSONObject resultJson = JSONObject.parseObject(getHtml);
             //System.out.println(resultJson);
@@ -235,7 +301,9 @@ public class HttpUtils {
 
         //getApiDataNew("20220408","gw_id:String,company_name:String,company_address:String,visit_date:String,month_pv_sum:Int,pv_sum:Int,device_type:String,describe_1:String,describe_2:String,website_type:String");
 
-        getApiDataWeek("20220415","gw_id:String,company_name:String,company_address:String,visit_date:String,month_pv_sum:Int,pv_sum:Int,device_type:String,describe_1:String,describe_2:String,website_type:String");
+        getApiDataHostDay("job-eu_02_adcookie_20220712_01","gw_id:String,company_name:String,company_address:String,visit_date:String,month_pv_sum:Int,pv_sum:Int,device_type:String,describe_1:String,describe_2:String,website_type:String");
+
+        //getApiDataWeek("20220415","gw_id:String,company_name:String,company_address:String,visit_date:String,month_pv_sum:Int,pv_sum:Int,device_type:String,describe_1:String,describe_2:String,website_type:String");
     }
 
 }
