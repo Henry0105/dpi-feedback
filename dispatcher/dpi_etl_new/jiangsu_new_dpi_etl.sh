@@ -3,7 +3,7 @@ set -x -e
 
 # DISPATCHER 根目录
 DISPATCHER_HOME=$(cd `dirname $0`/.. ;pwd)
-source $DISPATCHER_HOME/conf/application.properties
+source $DISPATCHER_HOME/conf/carrier-shell.properties
 hive_db=${dpi_feedback_db}
 hive_table=ods_dpi_mkt_feedback_incr
 
