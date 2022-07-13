@@ -4,7 +4,7 @@ set -x -e
 sbin_home=$(cd `dirname $0`;pwd)
 cd  $sbin_home/../
 home_dir=`pwd`
-source $home_dir/conf/application.properties
+source $home_dir/conf/carrier-shell.properties
 hive_db=${dpi_feedback_db}
 hive_table=ods_dpi_mkt_feedback_incr
 
