@@ -9,8 +9,6 @@ hive_db=${dpi_feedback_db}
 hive_table=ods_dpi_mkt_feedback_incr
 
 
-
-
 #base_dir="/data/dpi/unicom/download/667673052142845952/"
 dispatcher_check_files=${dispatcher_check_files}
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
@@ -26,8 +24,8 @@ file_list=$3
 function deal_file(){
   file_path=$1
   file_name=${file_path##*/}
-  #day=$(echo $file_name|awk -F '_' '{print $4}'|awk -F '.' '{print $1}')
-  day=$(date -d "$load_day 1 day ago"  +%Y%m%d)
+  day=$(echo $file_name|awk -F '_' '{print $7}'|awk -F '.' '{print $1}')
+  #day=$(date -d "$load_day 1 day ago"  +%Y%m%d)
 
   hdfs_path=$hive_path/load_day=$load_day/source=$data_source/model_type=$model_type/day=$day
   echo "$file_path put into $hdfs_path"
@@ -54,6 +52,11 @@ do
 # fi
  deal_file $file
 done
-
 cd $home_dir
 hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"
+
+
+# mac os readlink -f not work
+DPIANALYZE_HOME=${dpianalyze_home}
+sh $DPIANALYZE_BIN_HOME/sbin/device_tag_result.sh "timewindow"  "unicom"  "all"  "$load_day" false true "20220706"
+
