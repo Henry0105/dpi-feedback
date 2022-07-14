@@ -24,7 +24,6 @@ if [ ! -d "$DPIANALYZE_TMP" ]; then
 fi
 
 echo ${DPIANALYZE_HOME}
-
 model=$1
 source=$2
 province=$3
@@ -32,7 +31,6 @@ day=${4:-$(date -d '2 days ago' +%Y%m%d)}
 mapping=${5:-"false"}
 force=${6:-"false"}
 imDay=${7:-""}
-
 /opt/mobdata/sbin/spark-submit \
     --verbose \
     --executor-memory 6G \

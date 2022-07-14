@@ -58,3 +58,7 @@ done
 cd $home_dir
 #hive -e "msck repair table ${hive_db}.${hive_table}"
 hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"
+
+# mac os readlink -f not work
+DPIANALYZE_HOME=${dpianalyze_home}
+sh $DPIANALYZE_BIN_HOME/sbin/device_tag_result.sh "generic"  "unicom_proxy"  "all"  "$load_day" false true "20220510"
