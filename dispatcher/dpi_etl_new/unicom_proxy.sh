@@ -61,4 +61,4 @@ hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_
 
 # mac os readlink -f not work
 DPIANALYZE_HOME=${dpianalyze_home}
-sh $DPIANALYZE_BIN_HOME/sbin/device_tag_result.sh "generic"  "unicom_proxy"  "all"  "$load_day" false true "20220510"
+sh DPIANALYZE_HOME/sbin/device_tag_result.sh "generic"  "unicom_proxy"  "all"  "$load_day" false true "20220510"

@@ -58,5 +58,5 @@ hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_
 
 # mac os readlink -f not work
 DPIANALYZE_HOME=${dpianalyze_home}
-sh $DPIANALYZE_BIN_HOME/sbin/device_tag_result.sh "timewindow"  "unicom"  "all"  "$load_day" false true "20220706"
+sh DPIANALYZE_HOME/sbin/device_tag_result.sh "timewindow"  "unicom"  "all"  "$load_day" false true "20220706"
 

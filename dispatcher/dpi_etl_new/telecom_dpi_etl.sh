@@ -55,4 +55,4 @@ hive -e "msck repair table ${hive_db}.${hive_table}"
 
 # mac os readlink -f not work
 DPIANALYZE_HOME=${dpianalyze_home}
-sh $DPIANALYZE_BIN_HOME/device_tag_result.sh "common"  "telecom"  "all"  "$load_day" false true "20220510"
+sh DPIANALYZE_HOME/device_tag_result.sh "common"  "telecom"  "all"  "$load_day" false true "20220510"
