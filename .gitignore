@@ -29,5 +29,5 @@ metastore_db/
 
 dpianalyze-core/src/main/resources/*
 
-dpi_feedback_new/*
+dpianalyze-core_new/*
 
