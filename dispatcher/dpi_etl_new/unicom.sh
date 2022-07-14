@@ -79,4 +79,4 @@ if [ ! -d "$DPIANALYZE_TMP" ]; then
 fi
 
 DPIANALYZE_BIN_HOME1="$DPIANALYZE_BIN_HOME/device_tag_result.sh"
-sh $DPIANALYZE_BIN_HOME1 device_tag_result.sh "timewindow"  "unicom"  "all"  "$load_day" false true "20220706"
+sh $DPIANALYZE_BIN_HOME1  "timewindow"  "unicom"  "all"  "$load_day" false true "20220706"
