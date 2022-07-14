@@ -54,5 +54,24 @@ cd $home_dir
 hive -e "msck repair table ${hive_db}.${hive_table}"
 
 # mac os readlink -f not work
-DPIANALYZE_HOME=${dpianalyze_home}
-sh DPIANALYZE_HOME/device_tag_result.sh "common"  "telecom"  "all"  "$load_day" false true "20220510"
+if [ -z "${DPIANALYZE_HOME}" ]; then
+    export DPIANALYZE_HOME="$(readlink -f $(cd "`dirname "$0"`"/..; pwd))"
+fi
+
+DPIANALYZE_BIN_HOME="$DPIANALYZE_HOME/sbin"
+DPIANALYZE_TMP="$DPIANALYZE_HOME/tmp"
+DPIANALYZE_LOG_DIR="$DPIANALYZE_HOME/logs"
+DPIANALYZE_CONF_DIR="$DPIANALYZE_HOME/conf"
+DPIANALYZE_LIB_DIR="$DPIANALYZE_HOME/lib"
+
+source ${DPIANALYZE_CONF_DIR}/dpianalyze-env.sh
+
+if [ ! -d "$DPIANALYZE_LOG_DIR" ]; then
+    mkdir -p "$DPIANALYZE_LOG_DIR"
+fi
+
+if [ ! -d "$DPIANALYZE_TMP" ]; then
+    mkdir -p "$DPIANALYZE_TMP"
+fi
+DPIANALYZE_BIN_HOME1="$DPIANALYZE_BIN_HOME/device_tag_result.sh"
+sh $DPIANALYZE_BIN_HOME1 "common"  "telecom"  "all"  "$load_day" false true "20220510"
