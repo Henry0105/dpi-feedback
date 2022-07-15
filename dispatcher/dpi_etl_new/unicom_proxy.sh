@@ -6,10 +6,12 @@ home_dir=`pwd`
 source $home_dir/conf/application.properties
 hive_db=$incr_hive_db
 hive_table=ods_dpi_mkt_feedback_incr
+
 base_dir="/data/dpi/unicom_proxy"
 dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=unicom_proxy
+
 model_type=$2
 deal_file_num=0
 cd $base_dir

@@ -1,31 +1,33 @@
 #!/bin/bash
 set -x -e
 
-sbin_home=$(cd `dirname $0`;pwd)
-cd  $sbin_home/../
+cd `dirname $0`
 home_dir=`pwd`
-source $home_dir/conf/carrier-shell.properties
-hive_db=${dpi_feedback_db}
+source $home_dir/conf/application.properties
+hive_db=$incr_hive_db
 hive_table=ods_dpi_mkt_feedback_incr
 
-
-#base_dir="/data/dpi/unicom/download/667673052142845952/"
-dispatcher_check_files=${dispatcher_check_files}
+base_dir="/data/dpi/unicom_new/download"
+dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=unicom
 
+model_type=$2
 deal_file_num=0
-
+cd $base_dir
 
 load_day=$1
-model_type=$2
+
 file_list=$3
 
+echo ==============1:$1=========2:$2========3:$3
+
+
 function deal_file(){
+  cd $base_dir
   file_path=$1
   file_name=${file_path##*/}
   day=$(echo $file_name|awk -F '_' '{print $7}'|awk -F '.' '{print $1}')
-  #day=$(date -d "$load_day 1 day ago"  +%Y%m%d)
 
   hdfs_path=$hive_path/load_day=$load_day/source=$data_source/model_type=$model_type/day=$day
   echo "$file_path put into $hdfs_path"

@@ -1,30 +1,33 @@
 #!/bin/bash
 set -x -e
 
-sbin_home=$(cd `dirname $0`;pwd)
-cd  $sbin_home/../
+cd `dirname $0`
 home_dir=`pwd`
-source $home_dir/conf/carrier-shell.properties
-hive_db=${dpi_feedback_db}
+source $home_dir/conf/application.properties
+hive_db=$incr_hive_db
 hive_table=ods_dpi_mkt_feedback_incr_telecom
 
-#/data/dpi/telecom/download/20211027/telecom_mob_20211027.txt
-#base_dir=/data/dpi/telecom/download
-dispatcher_check_files=${dispatcher_check_files}
+base_dir="/data/dpi/telecom/download"
+dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=telecom
 
+model_type=$2
 deal_file_num=0
+cd $base_dir
 
 load_day=$1
+
 file_list=$3
+
+echo ==============1:$1=========2:$2========3:$3
+
 
 function deal_file(){
   cd $base_dir
   file_path=$1
   file_name=${file_path##*/}
   model_type=common
-  #day=$(echo $file_name|awk -F '_' '{print $NF}'|awk -F '.' '{print $1}')
   day=$(date -d "$load_day -1 day" +%Y%m%d)
   hdfs_path=$hive_path/load_day=$load_day/source=$data_source/model_type=$model_type/day=$day
   cd $home_dir
@@ -49,7 +52,7 @@ do
  #  echo ${acture_file_size} > ${dispatcher_check_files}${file}".dispatcher_verf"
  #  exit 1
  #fi
- deal_file ${file}
+ deal_file $file
 done
 
 cd $home_dir
