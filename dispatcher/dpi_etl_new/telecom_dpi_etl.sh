@@ -5,7 +5,7 @@ sbin_home=$(cd `dirname $0`;pwd)
 cd  $sbin_home/../
 home_dir=`pwd`
 source $home_dir/conf/carrier-shell.properties
-hive_db=${dpi_telecom_db}
+hive_db=${dpi_feedback_db}
 hive_table=ods_dpi_mkt_feedback_incr_telecom
 
 #/data/dpi/telecom/download/20211027/telecom_mob_20211027.txt
@@ -17,7 +17,6 @@ data_source=telecom
 deal_file_num=0
 
 load_day=$1
-
 file_list=$3
 
 function deal_file(){
@@ -54,7 +53,7 @@ do
 done
 
 cd $home_dir
-hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"
+hive -e "msck repair table ${hive_db}.${hive_table}"
 
 # mac os readlink -f not work
 if [ -z "${DPIANALYZE_HOME}" ]; then
