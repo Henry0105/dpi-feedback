@@ -1,19 +1,20 @@
 #!/bin/bash
 set -x -e
 
-cd `dirname $0`
+sbin_home=$(cd `dirname $0`;pwd)
+cd  $sbin_home/../
 home_dir=`pwd`
 source $home_dir/conf/carrier-shell.properties
 hive_db=${dpi_telecom_db}
 hive_table=ods_dpi_mkt_feedback_incr_telecom
 
 #/data/dpi/telecom/download/20211027/telecom_mob_20211027.txt
-base_dir=/data/dpi/telecom/download
-dispatcher_check_files=$dispatcher_check_files
+#base_dir=/data/dpi/telecom/download
+dispatcher_check_files=${dispatcher_check_files}
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=telecom
+
 deal_file_num=0
-cd $base_dir
 
 load_day=$1
 
@@ -53,7 +54,7 @@ do
 done
 
 cd $home_dir
-hive -e "msck repair table ${hive_db}.${hive_table}"
+hive -e "alter table ${hive_db}.${hive_table} add  if not exists partition(load_day='$load_day',source='$data_source',model_type='$model_type',day='$day');"
 
 # mac os readlink -f not work
 if [ -z "${DPIANALYZE_HOME}" ]; then
