@@ -211,9 +211,9 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
           |select id
           |       ,trimQuotes(split(regexp_replace(tag_exp,'\\#',''),'\\:')[0]) as tag
           |       ,case when size(split(regexp_replace(tag_exp,'\\#',''),'\\:')) > 1
-          |        then REGEXP_EXTRACT(tag_exp,'[^\\"$str"]+', 0) else 1 end as times
+          |        then REGEXP_EXTRACT(split(tag_exp,'\\:')[1],'[^\\"$str"]+', 0) else 1 end as times
           |       ,case when size(split(regexp_replace(tag_exp,'\\#',''),'\\:')) > 1
-          |        then REGEXP_EXTRACT(tag_exp,'[^\\$str]+', 0) else 1 end as merge_times
+          |        then REGEXP_EXTRACT(split(tag_exp,'\\:')[1],'[^\\$str]+', 0) else 1 end as merge_times
           |       ,value_md5_14
           |       ,pid
           |       ,day
@@ -223,7 +223,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
           |        pid_ltm,
           |        province_cn,
           |        carrier,
-          |        REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_EXTRACT(tag_exp,'[\\$str](.*)', 1),'\\$str',','),'\\#',':') pvtimes
+          |        REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_EXTRACT(split(tag_exp,'\\:')[1]
+          |        ,'[\\\\$str](.*)', 1),'\\\\$str',','),'\\#',':') pvtimes
           |from tag_value_mapping_tmp
           |LATERAL VIEW explode(split(tag,'\\,')) t1 as tag_exp
           |""".stripMargin
