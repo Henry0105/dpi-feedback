@@ -280,10 +280,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
          |partition (load_day='$loadDay',source='${
         if (source.equals("guangdong_mobile_new")) {
           "guangdong_mobile"
-        } else {
-          source
-        }
-      },
+        } else source
+      }',
          |model_type='$modelType', day='$day')
          |select trim(id) id
          |       ,trim(tag) tag
