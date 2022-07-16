@@ -224,7 +224,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
           |        province_cn,
           |        carrier,
           |        REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_EXTRACT(split(tag_exp,'\\:')[1]
-          |        ,'[\\$str](.*)', 1),'\\$str',','),'\\#',':') pvtimes
+          |        ,'[\\\\$str](.*)', 1),'\\\\$str',','),'\\#',':') pvtimes
           |from tag_value_mapping_tmp
           |LATERAL VIEW explode(split(tag,'\\,')) t1 as tag_exp
           |""".stripMargin
