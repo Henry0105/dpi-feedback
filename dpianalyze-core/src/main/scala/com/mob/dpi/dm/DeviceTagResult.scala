@@ -283,7 +283,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
         } else {
           source
         }
-      }',
+      },
          |model_type='$modelType', day='$day')
          |select trim(id) id
          |       ,trim(tag) tag
