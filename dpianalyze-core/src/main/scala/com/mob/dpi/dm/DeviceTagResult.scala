@@ -180,7 +180,7 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
 
     sql("select * from tag_value_mapping_tmp").show(50, false)
 
-
+    val str = "$"
     // 拆分tag
     if (source.equals("unicom_proxy")) {
       sql(
@@ -199,12 +199,38 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
            |        plat,
            |        pid_ltm,
            |        province_cn,
-           |        carrier
+           |        carrier,
+           |        null as pvtimes
            |from tag_value_mapping_tmp
            |LATERAL VIEW explode(split(tag,'\\,')) t1 as tag_exp
        """.stripMargin
       ).repartition(1).cache().createOrReplaceTempView("tag_explode_tmp")
-    } else {
+    } else if (source.equals("jiangsu_mobile_new")) {
+      sql(
+        s"""
+          |select id
+          |       ,trimQuotes(split(regexp_replace(tag_exp,'\\#',''),'\\:')[0]) as tag
+          |       ,case when size(split(regexp_replace(tag_exp,'\\#',''),'\\:')) > 1
+          |        then REGEXP_EXTRACT(split(tag_exp,'\\:')[1],'[^\\"$str"]+', 0) else 1 end as times
+          |       ,case when size(split(regexp_replace(tag_exp,'\\#',''),'\\:')) > 1
+          |        then REGEXP_EXTRACT(split(tag_exp,'\\:')[1],'[^\\$str]+', 0) else 1 end as merge_times
+          |       ,value_md5_14
+          |       ,pid
+          |       ,day
+          |       ,tag_limit_version,
+          |        ieid15,
+          |        plat,
+          |        pid_ltm,
+          |        province_cn,
+          |        carrier,
+          |        REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_EXTRACT(split(tag_exp,'\\:')[1]
+          |        ,'[\\\\$str](.*)', 1),'\\\\$str',','),'\\#',':') pvtimes
+          |from tag_value_mapping_tmp
+          |LATERAL VIEW explode(split(tag,'\\,')) t1 as tag_exp
+          |""".stripMargin
+      ).repartition(1).cache().createOrReplaceTempView("tag_explode_tmp")
+    }
+    else {
       sql(
         s"""
            |select id
@@ -221,7 +247,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
            |        plat,
            |        pid_ltm,
            |        province_cn,
-           |        carrier
+           |        carrier,
+           |        null as pvtimes
            |from tag_value_mapping_tmp
            |LATERAL VIEW explode(split(tag,'\\,')) t1 as tag_exp
        """.stripMargin
@@ -280,7 +307,9 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
          |partition (load_day='$loadDay',source='${
         if (source.equals("guangdong_mobile_new")) {
           "guangdong_mobile"
-        } else source
+        } else {
+          source
+        }
       }',
          |model_type='$modelType', day='$day')
          |select trim(id) id
@@ -295,7 +324,8 @@ case class DeviceTagResult(jobContext: JobContext) extends Cacheable {
          |        pid_ltm,
          |        province_cn,
          |        carrier,
-         |        from_unixtime(unix_timestamp(),"yyyy-MM-dd HH:mm:ss") as incr_time
+         |        from_unixtime(unix_timestamp(),"yyyy-MM-dd HH:mm:ss") as incr_time,
+         |        pvtimes
          |from $preSinkTable
          |where tag IS NOT NULL
        """.stripMargin
