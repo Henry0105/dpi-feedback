@@ -1,10 +1,11 @@
 #!/bin/bash
 set -x -e
 
-cd `dirname $0`
+sbin_home=$(cd `dirname $0`;pwd)
+cd  $sbin_home/../
 home_dir=`pwd`
-source $home_dir/conf/application.properties
-hive_db=$incr_hive_db
+source $home_dir/conf/carrier-shell.properties
+hive_db=${dpi_feedback_db}
 hive_table=ods_dpi_mkt_feedback_incr_telecom
 
 base_dir="/data/dpi/telecom/download"

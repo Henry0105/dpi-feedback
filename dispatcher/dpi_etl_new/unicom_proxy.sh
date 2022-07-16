@@ -3,7 +3,7 @@ set -x -e
 
 cd `dirname $0`
 home_dir=`pwd`
-source $home_dir/conf/application.properties
+source $home_dir/conf/carrier-shell.properties
 hive_db=$incr_hive_db
 hive_table=ods_dpi_mkt_feedback_incr
 
