@@ -83,3 +83,29 @@ fi
 
 DPIANALYZE_BIN_HOME1="$DPIANALYZE_BIN_HOME/device_tag_result.sh"
 sh $DPIANALYZE_BIN_HOME1  "timewindow"  "unicom"  "all"  "$load_day" false true "20220706"
+
+
+
+# mac os readlink -f not work
+if [ -z "${DPIANALYZE_HOME}" ]; then
+    export DPIANALYZE_HOME="$(readlink -f $(cd "`dirname "$0"`"/..; pwd))"
+fi
+
+DPIANALYZE_BIN_HOME="$DPIANALYZE_HOME/sbin"
+DPIANALYZE_TMP="$DPIANALYZE_HOME/tmp"
+DPIANALYZE_LOG_DIR="$DPIANALYZE_HOME/logs"
+DPIANALYZE_CONF_DIR="$DPIANALYZE_HOME/conf"
+DPIANALYZE_LIB_DIR="$DPIANALYZE_HOME/lib"
+
+
+
+if [ ! -d "$DPIANALYZE_LOG_DIR" ]; then
+    mkdir -p "$DPIANALYZE_LOG_DIR"
+fi
+
+if [ ! -d "$DPIANALYZE_TMP" ]; then
+    mkdir -p "$DPIANALYZE_TMP"
+fi
+
+DPIANALYZE_BIN_HOME1="$DPIANALYZE_BIN_HOME/device_tag_result.sh"
+sh $DPIANALYZE_BIN_HOME1  "timewindow"  "unicom"  "all"  "$load_day" false true "20220706"
