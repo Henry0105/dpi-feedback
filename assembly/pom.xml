@@ -61,7 +61,7 @@
             <configuration>
               <tasks>
                 <move file="${project.build.directory}/assembly-${project.version}-dist"
-                  tofile="${project.basedir}/../dist"/>
+                  tofile="${project.basedir}/../dpianalyze-core_new"/>
               </tasks>
             </configuration>
           </execution>
