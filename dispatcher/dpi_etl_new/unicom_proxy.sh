@@ -1,20 +1,19 @@
 #!/bin/bash
 set -x -e
 
-cd `dirname $0`
+sbin_home=$(cd `dirname $0`;pwd)
+cd  $sbin_home/../
 home_dir=`pwd`
 source $home_dir/conf/carrier-shell.properties
-hive_db=$incr_hive_db
+hive_db=${dpi_feedback_db}
 hive_table=ods_dpi_mkt_feedback_incr
 
-base_dir="/data/dpi/unicom_proxy"
 dispatcher_check_files=$dispatcher_check_files
 hive_path=/user/hive/warehouse/${hive_db}.db/${hive_table}
 data_source=unicom_proxy
 
 model_type=$2
 deal_file_num=0
-cd $base_dir
 
 load_day=$1
 
@@ -24,7 +23,6 @@ echo ==============1:$1=========2:$2========3:$3
 
 
 function deal_file(){
-  cd $base_dir
   file_path=$1
   file_name=${file_path##*/}
   tag_limit_version=$(echo $file_name|awk -F '_' '{print $2}')
